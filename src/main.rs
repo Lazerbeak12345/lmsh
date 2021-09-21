@@ -8,7 +8,7 @@ enum ReplSource{
     User,
     File,
 }
-fn read(source:ReplSource,last_errors:ReplError)->Result<String,()>{
+fn read(source:ReplSource,last_errors:ReplError)->Option<String>{
     todo!("Get the code that needs to run! {:?} {:?}", source, last_errors)
 }
 fn eval(string:String)->ReplError{
@@ -23,7 +23,7 @@ fn repl(source:ReplSource)->Result<(),ReplError>{
     let mut repl_err=ReplError::ErrorCodes(Vec::new());
     loop{
         match read(source,repl_err){
-            Ok(data)=>{
+            Some(data)=>{
                 repl_err=eval(data);
                 match source{
                     ReplSource::File=>{
@@ -39,7 +39,7 @@ fn repl(source:ReplSource)->Result<(),ReplError>{
                     ReplSource::User=>{}
                 }
             },
-            Err(..)=>return Ok(())
+            None=>return Ok(())
         }
     }
 }
