@@ -8,10 +8,15 @@ fn main() {
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1)
     });
-    //TODO Run config file (uses non-interactive repl under hood)
-    if args.interactive{
+    if args.version{
         greet();
-        //TODO interactive repl
+        println!("version 0.1.0");
+    }else{
+        //TODO Run config file (uses non-interactive repl under hood)
+        if args.interactive{
+            greet();
+            //TODO interactive repl
+        }
+        //TODO on exit return last exit status of ran command
     }
-    //TODO on exit return last exit status of ran command
 }
