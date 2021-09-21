@@ -44,7 +44,7 @@ pub mod arguments{
                             return Err(format!("Expected flag, got \"{}\"",arg))
                         }
                     },
-                    None=>return Err("Argument was empty!".to_string())//dead code
+                    None=>panic!("The argument should never be empty!")
                 }
             }
             Ok(arguments)
