@@ -1,8 +1,8 @@
 use std::process::exit;
-use lmsh::arguments::Arguments;
-use lmsh::repl::{repl, ReplSource};
 use std::env;
 use std::path;
+use lmsh::arguments::Arguments;
+use lmsh::repl::{repl, ReplSource};
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
 }
