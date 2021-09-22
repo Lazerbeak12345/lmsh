@@ -6,35 +6,38 @@ use lmsh::repl::{repl, ReplSource};
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
 }
-fn run_config_file(){
-    {//find config file
-        let home_config_vec=match env::var_os("HOME"){
-            Some(val)=>{
-                let mut pb=path::PathBuf::from(val);
-                pb.push(".config");
-                vec![pb]
-            },
-            None=>Vec::new()
-        };
-        let xdg_config_dirs=match env::var_os("XDG_CONFIG_DIRS"){
-            Some(val)=>{
-                let mut vec=home_config_vec;
-                for path in env::split_paths(&val){
-                    vec.push(path)
-                }
-                vec
-            },
-            None=>home_config_vec
-        }.iter().map(|path|{
-            let mut new_path=path.clone();
-            new_path.push("lmsh");
-            new_path
-        });
-        todo!("iterate over each item in xdg_data_dirs till init.lmsh is or init.sh is found inside a folder titled \"lmsh\"")
-    }
-    //TODO repl config file
+fn get_config_file()->Option<path::PathBuf>{
+    let home_config_vec=match env::var_os("HOME"){
+        Some(val)=>{
+            let mut pb=path::PathBuf::from(val);
+            pb.push(".config");
+            vec![pb]
+        },
+        None=>Vec::new()
+    };
+    match env::var_os("XDG_CONFIG_DIRS"){
+        Some(val)=>{
+            let mut vec=home_config_vec;
+            for path in env::split_paths(&val){
+                vec.push(path)
+            }
+            vec
+        },
+        None=>home_config_vec
+    }.iter().map(|path|{
+        let mut new_path=path.clone();
+        new_path.push("lmsh");
+        new_path.push("init.lmsh");
+        new_path
+    }).filter(|path|path.exists()).next()//We want to run only the first file.
 }
-fn main() {
+fn run_config_file(){
+    match get_config_file(){
+        Some(config_file)=>todo!("repl config file {:?}",config_file),
+        None=>{}
+    }
+}
+fn main(){
     let args=Arguments::parse().unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
         exit(1)
