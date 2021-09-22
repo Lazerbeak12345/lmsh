@@ -2,7 +2,7 @@ use std::process::exit;
 use std::env;
 use std::path;
 use lmsh::arguments::Arguments;
-use lmsh::repl::{repl, ReplSource};
+use lmsh::repl::{repl, ReplSource, ReplError};
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
 }
@@ -33,7 +33,24 @@ fn get_config_file()->Option<path::PathBuf>{
 }
 fn run_config_file(){
     match get_config_file(){
-        Some(config_file)=>todo!("repl config file {:?}",config_file),
+        Some(config_file)=>{
+            match repl(ReplSource::File{
+                source:config_file
+            }){
+                Ok(..)=>return,
+                Err(ReplError::ErrorCodes(codes))=>{
+                    eprintln!(
+                        "During execution of the script these error messages were raised. {:?}",
+                        codes
+                    );
+                    exit(1)
+                },
+                Err(ReplError::SyntaxError(message))=>{
+                    eprintln!("{}",message);
+                    exit(1)
+                }
+            }
+        },
         None=>{}
     }
 }
@@ -44,7 +61,7 @@ fn main(){
     });
     if args.version{
         greet();
-        println!("version 0.1.0");
+        println!("version 0.1.0")
     }else{
         run_config_file();
         if args.interactive{
@@ -52,6 +69,7 @@ fn main(){
             match repl(ReplSource::User){
                 Ok(..)=>return,
                 Err(err)=>{
+                    //The message should be given to the user directly.
                     panic!("The repl should never return an error in user mode. {:?}",err)
                 }
             }
