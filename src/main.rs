@@ -43,7 +43,13 @@ fn run_config_file(){
                     codes,
                     file
                 );
-                exit(2)
+                exit(match codes.last(){
+                    Some(&code)=>code,
+                    None=>{
+                        eprintln!("List of codes was empty...");
+                        2
+                    }
+                })
             },
             Err((file,ReplError::SyntaxError(message)))=>{
                 eprintln!("Error:\"{}\" at {:?}",message,file);
