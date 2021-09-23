@@ -33,22 +33,21 @@ fn get_config_file()->Option<path::PathBuf>{
 }
 fn run_config_file(){
     match get_config_file(){
-        Some(config_file)=>{
-            match repl(ReplSource::File{
-                source:config_file
-            }){
-                Ok(..)=>return,
-                Err(ReplError::ErrorCodes(codes))=>{
-                    eprintln!(
-                        "During execution of the script these error messages were raised. {:?}",
-                        codes
-                    );
-                    exit(1)
-                },
-                Err(ReplError::SyntaxError(message))=>{
-                    eprintln!("{}",message);
-                    exit(1)
-                }
+        Some(config_file)=>match repl(ReplSource::File{
+            source:config_file
+        }){
+            Ok(())=>return,
+            Err((file,ReplError::ErrorCodes(codes)))=>{
+                eprintln!(
+                    "During execution of config script these error codes were raised. {:?} {:?}",
+                    codes,
+                    file
+                );
+                exit(2)
+            },
+            Err((file,ReplError::SyntaxError(message)))=>{
+                eprintln!("Error:\"{}\" at {:?}",message,file);
+                exit(3)
             }
         },
         None=>{}
@@ -67,7 +66,7 @@ fn main(){
         if args.interactive{
             greet();
             match repl(ReplSource::User){
-                Ok(..)=>return,
+                Ok(())=>return,
                 Err(err)=>{
                     //The message should be given to the user directly.
                     panic!("The repl should never return an error in user mode. {:?}",err)
