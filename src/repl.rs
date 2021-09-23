@@ -17,6 +17,7 @@ pub enum ReplError{
     ErrorCodes(Vec<i32>),
     SyntaxError(String)
 }
+pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
 /**
  * Run-Eval-Print-Loop.
  *
@@ -24,7 +25,7 @@ pub enum ReplError{
  * When result is Err, if it's an ReplError::ErrorCodes then it's a Vec of return codes, otherwise
  *    it's a String with the error message.
  */
-pub fn repl(source:ReplSource)->Result<(),(ReplSource,ReplError)>{
+pub fn repl(source:ReplSource)->ReplReturn{
     let mut repl_err=ReplError::ErrorCodes(Vec::new());
     loop{
         match read(&source,repl_err){

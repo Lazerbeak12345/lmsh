@@ -2,7 +2,7 @@ use std::process::exit;
 use std::env;
 use std::path;
 use lmsh::arguments::Arguments;
-use lmsh::repl::{repl, ReplSource, ReplError};
+use lmsh::repl::{repl,ReplSource,ReplError,ReplReturn};
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
 }
@@ -31,13 +31,24 @@ fn get_config_file()->Option<path::PathBuf>{
         new_path
     }).filter(|path|path.exists()).next()//We want to run only the first file.
 }
-fn run_config_file(){
-    match get_config_file(){
-        Some(config_file)=>match repl(ReplSource::File{
-            source:config_file
-        }){
-            Ok(())=>return,
-            Err((file,ReplError::ErrorCodes(codes)))=>{
+fn run_config_file()->Option<ReplReturn>{
+    get_config_file().and_then(|config_file|
+                               Some(repl(ReplSource::File{
+                                   source:config_file
+                               })))
+}
+fn main(){
+    let args=Arguments::parse().unwrap_or_else(|err| {
+        eprintln!("Problem parsing arguments: {}", err);
+        exit(1)
+    });
+    if args.version{
+        greet();
+        println!("version 0.1.0")
+    }else{
+        match run_config_file(){
+            Some(Ok(()))=>{},
+            Some(Err((file,ReplError::ErrorCodes(codes))))=>{
                 eprintln!(
                     "During execution of config script these error codes were raised. {:?} {:?}",
                     codes,
@@ -51,24 +62,12 @@ fn run_config_file(){
                     }
                 })
             },
-            Err((file,ReplError::SyntaxError(message)))=>{
+            Some(Err((file,ReplError::SyntaxError(message))))=>{
                 eprintln!("Error:\"{}\" at {:?}",message,file);
                 exit(3)
-            }
-        },
-        None=>{}
-    }
-}
-fn main(){
-    let args=Arguments::parse().unwrap_or_else(|err| {
-        eprintln!("Problem parsing arguments: {}", err);
-        exit(1)
-    });
-    if args.version{
-        greet();
-        println!("version 0.1.0")
-    }else{
-        run_config_file();
+            },
+            None=>{}
+        };
         if args.interactive{
             greet();
             match repl(ReplSource::User){
