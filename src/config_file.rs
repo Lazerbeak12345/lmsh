@@ -28,7 +28,5 @@ fn get_config_file()->Option<PathBuf>{
 }
 pub fn run_config_file()->Option<ReplReturn>{
     get_config_file().and_then(|config_file|
-                               Some(repl(ReplSource::File{
-                                   source:config_file
-                               })))
+                               Some(repl(ReplSource::new_file(config_file))))
 }

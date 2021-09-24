@@ -3,8 +3,19 @@ use std::path::PathBuf;
 pub enum ReplSource{
     User,
     File{
-        source:PathBuf
+        source:PathBuf,
+        line:i32,
+        char:i32
     },
+}
+impl ReplSource{
+    pub fn new_file(source:PathBuf)->ReplSource{
+        ReplSource::File{
+            source,
+            line:0,
+            char:0
+        }
+    }
 }
 fn read(source:&ReplSource,last_errors:ReplError)->Option<String>{
     todo!("Get the code that needs to run! {:?} {:?}", source, last_errors)
