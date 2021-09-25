@@ -1,27 +1,29 @@
 use std::path::PathBuf;
+use std::io::Bytes;
 #[derive(Debug)]
 pub enum ReplSource{
     User,
-    File{
-        source:PathBuf,
-        line:i32,
-        char:i32
-    },
+    File(PathBuf)
 }
-impl ReplSource{
-    pub fn new_file(source:PathBuf)->ReplSource{
-        ReplSource::File{
-            source,
-            line:0,
-            char:0
-        }
-    }
+fn read(source:ReplSource)->Bytes<u8>{
+    todo!("Get code from the file {:?}",source)
 }
-fn read(source:&ReplSource,last_errors:ReplError)->Option<String>{
-    todo!("Get the code that needs to run! {:?} {:?}", source, last_errors)
+fn prompt()->Bytes<u8>{
+    todo!("Prompt the user for code!")
 }
-fn eval(string:String)->ReplError{
-    todo!("Run the code! {}",string)
+#[derive(Debug)]
+struct ReplTokens;
+//TODO impl Iterator for ReplTokens
+fn tokenize(bytes:Bytes<u8>)->ReplTokens{
+    todo!("convert code stream into token stream{:?}",bytes)
+}
+#[derive(Debug)]
+struct ReplTree;
+fn parse(tokens:ReplTokens)->ReplTree{
+    todo!("convert token stream into parse tree{:?}",tokens)
+}
+fn eval(tree:ReplTree)->ReplReturn{
+    todo!("Run the code!{:?}",tree);
 }
 #[derive(Debug)]
 pub enum ReplError{
@@ -37,24 +39,13 @@ pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
  *    it's a String with the error message.
  */
 pub fn repl(source:ReplSource)->ReplReturn{
-    let mut repl_err=ReplError::ErrorCodes(Vec::new());
-    loop{
-        match read(&source,repl_err){
-            Some(data)=>{
-                repl_err=eval(data);
-                match source{
-                    ReplSource::File{..}=>return Err((source,repl_err)),
-                    ReplSource::User=>match&repl_err{
-                        ReplError::ErrorCodes(codes)=>if!codes.is_empty(){
-                            println!("Return codes:{:?}",codes)
-                        },
-                        ReplError::SyntaxError(message)=>{
-                            println!("Syntax err:{}",message)
-                        }
-                    }
-                }
-            },
-            None=>return Ok(())
+    match source{
+        ReplSource::File(..)=>eval(parse(tokenize(read(source)))),
+        ReplSource::User=>loop{
+            match eval(parse(tokenize(prompt()))){
+                Err(err)=>todo!("Handle error {:?}",err),
+                _=>{}
+            }
         }
     }
 }
