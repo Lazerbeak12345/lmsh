@@ -6,11 +6,14 @@ mod source{
         User,
         File(PathBuf)
     }
-    pub fn read(source:ReplSource)->Bytes<u8>{
-        todo!("Get code from the file {:?}",source)
-    }
-    pub fn prompt()->Bytes<u8>{
+    fn prompt()->Bytes<u8>{
         todo!("Prompt the user for code!")
+    }
+    pub fn read(source:ReplSource)->Bytes<u8>{
+        match source{
+            ReplSource::User=>prompt(),
+            ReplSource::File(path)=>todo!("Get code from the file {:?}",path)
+        }
     }
 }
 pub use source::ReplSource;
@@ -55,6 +58,10 @@ pub enum ReplError{
     SyntaxError(String)
 }
 pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
+///Like repl but no loop
+fn rep(source:ReplSource)->ReplReturn{
+    eval(ReplTree::parse(ReplTokens::tokenize(read(source))))
+}
 /**
  * Run-Eval-Print-Loop.
  *
@@ -64,9 +71,9 @@ pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
  */
 pub fn repl(source:ReplSource)->ReplReturn{
     match source{
-        ReplSource::File(..)=>eval(ReplTree::parse(ReplTokens::tokenize(read(source)))),
+        ReplSource::File(..)=>rep(source),
         ReplSource::User=>loop{
-            match eval(ReplTree::parse(ReplTokens::tokenize(prompt()))){
+            match rep(ReplSource::User){
                 Err(err)=>todo!("Handle error {:?}",err),
                 _=>{}
             }
