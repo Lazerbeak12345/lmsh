@@ -1,7 +1,7 @@
 use std::process::exit;
 use lmsh::arguments::Arguments;
 use lmsh::repl::{repl,ReplSource,ReplError};
-use lmsh::config_file::run_config_file;
+use lmsh::init_files::run_init_files;
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
 }
@@ -14,7 +14,8 @@ fn main(){
         greet();
         println!("version 0.1.0")
     }else{
-        match run_config_file(){
+        //TODO pass true if it's a login shell
+        match run_init_files(true){
             Some(Ok(()))=>{},
             Some(Err((file,ReplError::ErrorCodes(codes))))=>{
                 eprintln!(

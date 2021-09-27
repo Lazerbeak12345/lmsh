@@ -26,7 +26,25 @@ fn get_config_file()->Option<PathBuf>{
         new_path
     }).filter(|path|path.exists()).next()//We want to run only the first file.
 }
-pub fn run_config_file()->Option<ReplReturn>{
+fn run_config_file()->Option<ReplReturn>{
     get_config_file().and_then(|config_file|
                                Some(repl(ReplSource::File(config_file))))
+}
+fn run_profile()->Option<ReplReturn>{
+    //TODO run /etc/profile then run $HOME/.profile
+    let usr_profile=PathBuf::from("/etc/profile");
+    if usr_profile.exists(){
+        return Some(repl(ReplSource::File(usr_profile)))
+    }
+    return None
+}
+//TODO give the user a bare-minimum working shell instead of bailing
+pub fn run_init_files(login:bool)->Option<ReplReturn>{
+    if login{
+        match run_profile(){
+            Some(Err(err))=>return Some(Err(err)),
+            _=>{}
+        }
+    }
+    return run_config_file()
 }
