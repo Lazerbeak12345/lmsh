@@ -14,8 +14,7 @@ fn main(){
         greet();
         println!("version 0.1.0")
     }else{
-        //TODO pass true if it's a login shell
-        match run_init_files(true){
+        match run_init_files(args.login){
             Some(Ok(()))=>{},
             Some(Err((file,ReplError::ErrorCodes(codes))))=>{
                 eprintln!(

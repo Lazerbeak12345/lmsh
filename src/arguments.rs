@@ -2,12 +2,14 @@ use std::env;
 pub struct Arguments{
     pub interactive:bool,
     pub version:bool,
+    pub login:bool
 }
 impl Arguments{
     pub fn parse() -> Result<Arguments, String>{
         let mut arguments=Arguments{
             interactive:false,
             version:false,
+            login:false
         };
         enum NextDataArg{
             None,
@@ -20,6 +22,7 @@ impl Arguments{
                 Some('-')=>match arg_chars.next(){
                     Some('-')=>match arg.as_str(){
                         "--interactive"=>arguments.interactive=true,
+                        "--login"=>arguments.login=true,
                         "--version"=>arguments.version=true,
                         str=>return Err(format!("Unknown keyword argument \"{}\"",str))
                     },
@@ -28,6 +31,7 @@ impl Arguments{
                         loop{
                             match working_char{
                                 Some('i')=>arguments.interactive=true,
+                                Some('l')=>arguments.login=true,
                                 Some('v')=>arguments.version=true,
                                 Some(char)=>return Err(format!("Unknown short argument \"-{}\"",char)),
                                 None=>break
