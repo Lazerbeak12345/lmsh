@@ -18,9 +18,9 @@ fn main(){
             Some(Ok(()))=>{},
             Some(Err((file,ReplError::ErrorCodes(codes))))=>{
                 eprintln!(
-                    "During execution of config script these error codes were raised. {:?} {:?}",
-                    codes,
-                    file
+                    "During execution of {:?} these error codes were raised: {:?}",
+                    file,
+                    codes
                 );
                 exit(match codes.last(){
                     Some(&code)=>code,
