@@ -29,14 +29,26 @@ mod tokens{
     //TODO use a parse library
     use std::io::{Bytes,Error};
     use std::fs::File;
+    use std::string::FromUtf8Error;
     #[derive(Debug)]
-    pub enum ReplToken{}
+    pub enum ReplToken{
+        Literal(String),
+        Semicolon
+    }
     pub struct ReplTokens{
-        bytes:Bytes<File>
+        bytes:Bytes<File>,
+        semicolon:bool
+    }
+    enum TokenLiteralError{
+        IO(Error),
+        Unicode(FromUtf8Error)
     }
     impl ReplTokens{
         pub fn tokenize(bytes:Bytes<File>)->ReplTokens{
-            ReplTokens{bytes}
+            ReplTokens{
+                bytes,
+                semicolon:false
+            }
         }
         fn consume_comment(&mut self)->Result<(),Error>{
             loop{
@@ -48,14 +60,35 @@ mod tokens{
                 }
             }
         }
+        fn consume_literal(&mut self,first:u8)->Result<Option<ReplToken>,TokenLiteralError>{
+            let mut data=vec![first];
+            loop{
+                match self.bytes.next(){
+                    None|Some(Ok(b'\n'|b' '|b'\t'))=>break,
+                    Some(Ok(b';'))=>{
+                        self.semicolon=true;
+                        break
+                    },
+                    Some(Err(err))=>return Err(TokenLiteralError::IO(err)),
+                    Some(Ok(byte))=>data.push(byte)
+                }
+            }
+            match String::from_utf8(data){
+                Ok(data_as_str)=>return Ok(Some(ReplToken::Literal(data_as_str))),
+                Err(err)=>return Err(TokenLiteralError::Unicode(err))
+            }
+        }
     }
     impl Iterator for ReplTokens{
         type Item = ReplToken;
         fn next(&mut self)->Option<Self::Item>{
-            let current_token=None;
-            loop{
+            loop{ 
+                if self.semicolon{
+                    self.semicolon=false;
+                    return Some(ReplToken::Semicolon)
+                }
                 match self.bytes.next(){
-                    None=>break,
+                    None=>return None,
                     Some(Err(err))=>{
                         eprintln!("Error while reading from file: {}",err);
                         return None
@@ -71,10 +104,20 @@ mod tokens{
                     Some(Ok(quote@(b'\''|b'"')))=>todo!("Handle {}quotes",quote),
                     Some(Ok(b'`'))=>todo!("Handle backticks"),
                     Some(Ok(b'$'))=>todo!("Handle $ escape thingy"),
-                    Some(Ok(byte))=>todo!("Handle path starting with {}",byte)
+                    Some(Ok(b';'))=>self.semicolon=true,
+                    Some(Ok(byte))=>return match self.consume_literal(byte){
+                        Ok(literal)=>literal,
+                        Err(TokenLiteralError::IO(err))=>{
+                            eprintln!("Error while reading from file during literal: {}",err);
+                            None
+                        },
+                        Err(TokenLiteralError::Unicode(err))=>{
+                            eprintln!("Error while converting literal to usable value: {}",err);
+                            None
+                        }
+                    }
                 }
             }
-            current_token
         }
     }
 }
