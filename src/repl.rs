@@ -29,8 +29,8 @@ mod tokens{
     //TODO use a parse library
     use std::io::Bytes;
     use std::fs::File;
-    pub enum ReplToken{}
     #[derive(Debug)]
+    pub enum ReplToken{}
     pub struct ReplTokens{
         bytes:Bytes<File>
     }
@@ -51,10 +51,26 @@ mod tree{
     //TODO use a token library
     use super::tokens::ReplTokens;
     #[derive(Debug)]
-    pub struct ReplTree;
+    struct ReplCommand{
+        program:String,
+        args:Vec<String>
+    }
+    #[derive(Debug)]
+    pub struct ReplTree{
+        commands:Vec<ReplCommand>
+    }
     impl ReplTree{
-        pub fn parse(tokens:ReplTokens)->ReplTree{
-            todo!("convert token stream into parse tree{:?}",tokens)
+        pub fn parse(mut tokens:ReplTokens)->ReplTree{
+            let tree=ReplTree{
+                commands:Vec::new()
+            };
+            loop{
+                match tokens.next(){
+                    Some(token)=>todo!("Match on token type {:?}",token),
+                    None=>break
+                }
+            }
+            tree
         }
     }
 }
