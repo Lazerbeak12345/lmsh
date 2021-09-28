@@ -1,3 +1,4 @@
+use std::fmt::{Display,Formatter,Error};
 mod source{
     use std::path::PathBuf;
     use std::io::Bytes;
@@ -52,10 +53,17 @@ use tree::*;
 fn eval(tree:ReplTree)->ReplReturn{
     todo!("Run the code!{:?}",tree);
 }
-#[derive(Debug)]
 pub enum ReplError{
     ErrorCodes(Vec<i32>),
     SyntaxError(String)
+}
+impl Display for ReplError{
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(),Error> {
+        match self{
+            ReplError::ErrorCodes(codes)=>write!(f,"these error codes were raised: {:?}",codes),
+            ReplError::SyntaxError(err)=>write!(f,"this error was raised: {}",err)
+        }
+    }
 }
 pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
 ///Like repl but no loop
@@ -74,7 +82,7 @@ pub fn repl(source:ReplSource)->ReplReturn{
         ReplSource::File(..)=>rep(source),
         ReplSource::User=>loop{
             match rep(ReplSource::User){
-                Err(err)=>todo!("Handle error {:?}",err),
+                Err((file,err))=>todo!("Handle error where {} on {:?}.",err,file),
                 _=>{}
             }
         }

@@ -16,23 +16,18 @@ fn main(){
     }else{
         match run_init_files(args.login){
             Some(Ok(()))=>{},
-            Some(Err((file,ReplError::ErrorCodes(codes))))=>{
-                eprintln!(
-                    "During execution of {:?} these error codes were raised: {:?}",
-                    file,
-                    codes
-                );
-                exit(match codes.last(){
-                    Some(&code)=>code,
-                    None=>{
-                        eprintln!("List of codes was empty...");
-                        2
+            Some(Err((file,err)))=>{
+                eprintln!("In the file {:?} {}",file,err);
+                exit(match err{
+                    ReplError::ErrorCodes(codes)=>match codes.last(){
+                        Some(&code)=>code,
+                        None=>{
+                            eprintln!("List of codes was empty...");
+                            2
+                        }
                     }
+                    ReplError::SyntaxError(..)=>3
                 })
-            },
-            Some(Err((file,ReplError::SyntaxError(message))))=>{
-                eprintln!("Error:\"{}\" at {:?}",message,file);
-                exit(3)
             },
             None=>{}
         };
@@ -40,9 +35,9 @@ fn main(){
             greet();
             match repl(ReplSource::User){
                 Ok(())=>return,
-                Err(err)=>{
+                Err((..,err))=>{
                     //The message should be given to the user directly.
-                    panic!("The repl should never return an error in user mode. {:?}",err)
+                    panic!("The repl should never return an error in user mode. In user mode {}.",err)
                 }
             }
         }
