@@ -41,8 +41,20 @@ mod tokens{
     }
     impl Iterator for ReplTokens{
         type Item = ReplToken;
-        fn next(&mut self) -> Option<Self::Item> {
-            todo!("get the next token, if possible")
+        fn next(&mut self)->Option<Self::Item>{
+            let current_token=None;
+            loop{
+                match self.bytes.next(){
+                    None=>break,
+                    Some(Err(err))=>{
+                        eprintln!("{}",err);
+                        return None
+                    },
+                    Some(Ok(b'#'))=>todo!("Keep grabbing bytes till it's a newline"),
+                    Some(Ok(byte))=>todo!("Handle byte {}",byte)
+                }
+            }
+            current_token
         }
     }
 }
