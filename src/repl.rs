@@ -40,8 +40,7 @@ mod tokens{
         }
         fn consume_comment(&mut self)->Result<(),Error>{
             loop{
-                let next=self.bytes.next();
-                match next{
+                match self.bytes.next(){
                     None=>return Ok(()),
                     Some(Ok(b'\n'))=>return Ok(()),
                     Some(Ok(..))=>{},
