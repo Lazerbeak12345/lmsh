@@ -31,10 +31,12 @@ mod tokens{
     use std::fs::File;
     pub enum ReplToken{}
     #[derive(Debug)]
-    pub struct ReplTokens;
+    pub struct ReplTokens{
+        bytes:Bytes<File>
+    }
     impl ReplTokens{
         pub fn tokenize(bytes:Bytes<File>)->ReplTokens{
-            todo!("convert code stream into token stream{:?}",bytes)
+            ReplTokens{bytes}
         }
     }
     impl Iterator for ReplTokens{
