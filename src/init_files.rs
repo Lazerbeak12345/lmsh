@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::env::{var_os,split_paths};
-use crate::repl::{ReplReturn,repl,ReplSource};
+use crate::repl::{repl,ReplSource};
+use std::io::Error;
 fn get_config_file()->Option<PathBuf>{
     let home_config_vec=match var_os("HOME"){
         Some(val)=>{
@@ -26,11 +27,11 @@ fn get_config_file()->Option<PathBuf>{
         new_path
     }).filter(|path|path.exists()).next()//We want to run only the first file.
 }
-fn run_config_file()->Option<ReplReturn>{
+fn run_config_file()->Option<Result<(),Error>>{
     get_config_file().and_then(|config_file|
                                Some(repl(ReplSource::File(config_file))))
 }
-fn run_profile()->Option<ReplReturn>{
+fn run_profile()->Option<Result<(),Error>>{
     //TODO run /etc/profile then run $HOME/.profile
     let usr_profile=PathBuf::from("/etc/profile");
     if usr_profile.exists(){
@@ -39,7 +40,7 @@ fn run_profile()->Option<ReplReturn>{
     return None
 }
 //TODO give the user a bare-minimum working shell instead of bailing
-pub fn run_init_files(login:bool)->Option<ReplReturn>{
+pub fn run_init_files(login:bool)->Option<Result<(),Error>>{
     if login{
         match run_profile(){
             Some(Err(err))=>return Some(Err(err)),

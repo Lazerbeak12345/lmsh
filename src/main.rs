@@ -1,6 +1,6 @@
 use std::process::exit;
 use lmsh::arguments::Arguments;
-use lmsh::repl::{repl,ReplSource,ReplError};
+use lmsh::repl::{repl,ReplSource};
 use lmsh::init_files::run_init_files;
 fn greet(){
     println!("Welcome to Lazerbeak12345's Micro Shell!");
@@ -16,18 +16,9 @@ fn main(){
     }else{
         match run_init_files(args.login){
             Some(Ok(()))=>{},
-            Some(Err((file,err)))=>{
-                eprintln!("In the file {:?} {}",file,err);
-                exit(match err{
-                    ReplError::ErrorCodes(codes)=>match codes.last(){
-                        Some(&code)=>code,
-                        None=>{
-                            eprintln!("List of codes was empty...");
-                            2
-                        }
-                    }
-                    ReplError::SyntaxError(..)=>3
-                })
+            Some(Err(err))=>{
+                eprintln!("In a config file {}",err);
+                exit(2)
             },
             None=>{}
         };
@@ -35,7 +26,7 @@ fn main(){
             greet();
             match repl(ReplSource::User){
                 Ok(())=>return,
-                Err((..,err))=>{
+                Err(err)=>{
                     //The message should be given to the user directly.
                     panic!("The repl should never return an error in user mode. In user mode {}.",err)
                 }

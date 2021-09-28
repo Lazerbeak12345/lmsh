@@ -1,19 +1,25 @@
 use std::fmt::{Display,Formatter,Error};
+use std::io;
 mod source{
     use std::path::PathBuf;
-    use std::io::Bytes;
+    use std::io::prelude::*;
+    use std::io::{Bytes,Error};
+    use std::fs::File;
     #[derive(Debug)]
     pub enum ReplSource{
         User,
         File(PathBuf)
     }
-    fn prompt()->Bytes<u8>{
+    fn prompt()->Result<Bytes<File>,Error>{
         todo!("Prompt the user for code!")
     }
-    pub fn read(source:ReplSource)->Bytes<u8>{
+    fn open(path:PathBuf)->Result<Bytes<File>,Error>{
+        Ok(File::open(path)?.bytes())
+    }
+    pub fn read(source:ReplSource)->Result<Bytes<File>,Error>{
         match source{
             ReplSource::User=>prompt(),
-            ReplSource::File(path)=>todo!("Get code from the file {:?}",path)
+            ReplSource::File(path)=>open(path)
         }
     }
 }
@@ -22,11 +28,12 @@ use source::*;
 mod tokens{
     //TODO use a parse library
     use std::io::Bytes;
+    use std::fs::File;
     pub enum ReplToken{}
     #[derive(Debug)]
     pub struct ReplTokens;
     impl ReplTokens{
-        pub fn tokenize(bytes:Bytes<u8>)->ReplTokens{
+        pub fn tokenize(bytes:Bytes<File>)->ReplTokens{
             todo!("convert code stream into token stream{:?}",bytes)
         }
     }
@@ -50,7 +57,7 @@ mod tree{
     }
 }
 use tree::*;
-fn eval(tree:ReplTree)->ReplReturn{
+fn eval(tree:ReplTree){
     todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
@@ -65,10 +72,9 @@ impl Display for ReplError{
         }
     }
 }
-pub type ReplReturn=Result<(),(ReplSource,ReplError)>;
 ///Like repl but no loop
-fn rep(source:ReplSource)->ReplReturn{
-    eval(ReplTree::parse(ReplTokens::tokenize(read(source))))
+fn rep(source:ReplSource)->Result<(),io::Error>{
+    Ok(eval(ReplTree::parse(ReplTokens::tokenize(read(source)?))))
 }
 /**
  * Run-Eval-Print-Loop.
@@ -77,12 +83,12 @@ fn rep(source:ReplSource)->ReplReturn{
  * When result is Err, if it's an ReplError::ErrorCodes then it's a Vec of return codes, otherwise
  *    it's a String with the error message.
  */
-pub fn repl(source:ReplSource)->ReplReturn{
+pub fn repl(source:ReplSource)->Result<(),io::Error>{
     match source{
         ReplSource::File(..)=>rep(source),
         ReplSource::User=>loop{
             match rep(ReplSource::User){
-                Err((file,err))=>todo!("Handle error where {} on {:?}.",err,file),
+                Err(err)=>todo!("Handle error {}",err),
                 _=>{}
             }
         }
