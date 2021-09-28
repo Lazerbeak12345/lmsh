@@ -27,7 +27,7 @@ pub use source::ReplSource;
 use source::*;
 mod tokens{
     //TODO use a parse library
-    use std::io::Bytes;
+    use std::io::{Bytes,Error};
     use std::fs::File;
     #[derive(Debug)]
     pub enum ReplToken{}
@@ -38,6 +38,17 @@ mod tokens{
         pub fn tokenize(bytes:Bytes<File>)->ReplTokens{
             ReplTokens{bytes}
         }
+        fn consume_comment(&mut self)->Result<(),Error>{
+            loop{
+                let next=self.bytes.next();
+                match next{
+                    None=>return Ok(()),
+                    Some(Ok(b'\n'))=>return Ok(()),
+                    Some(Ok(..))=>{},
+                    Some(Err(err))=>return Err(err)
+                }
+            }
+        }
     }
     impl Iterator for ReplTokens{
         type Item = ReplToken;
@@ -47,11 +58,21 @@ mod tokens{
                 match self.bytes.next(){
                     None=>break,
                     Some(Err(err))=>{
-                        eprintln!("{}",err);
+                        eprintln!("Error while reading from file: {}",err);
                         return None
                     },
-                    Some(Ok(b'#'))=>todo!("Keep grabbing bytes till it's a newline"),
-                    Some(Ok(byte))=>todo!("Handle byte {}",byte)
+                    Some(Ok(b'#'))=>match self.consume_comment(){
+                        Ok(())=>{},//Just ignore the comment
+                        Err(err)=>{
+                            eprintln!("Error while reading from file during comment: {}",err);
+                            return None
+                        }
+                    },
+                    Some(Ok(b'\n'|b' '|b'\t'))=>{},
+                    Some(Ok(quote@(b'\''|b'"')))=>todo!("Handle {}quotes",quote),
+                    Some(Ok(b'`'))=>todo!("Handle backticks"),
+                    Some(Ok(b'$'))=>todo!("Handle $ escape thingy"),
+                    Some(Ok(byte))=>todo!("Handle path starting with {}",byte)
                 }
             }
             current_token
