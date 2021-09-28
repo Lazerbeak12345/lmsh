@@ -26,7 +26,7 @@ mod source{
 pub use source::ReplSource;
 use source::*;
 mod tokens{
-    //TODO use a parse library
+    //TODO use a token library
     use std::io::{Bytes,Error};
     use std::fs::File;
     use std::string::FromUtf8Error;
@@ -123,7 +123,7 @@ mod tokens{
 }
 use tokens::*;
 mod tree{
-    //TODO use a token library
+    //TODO use a parse library
     use super::tokens::ReplTokens;
     #[derive(Debug)]
     struct ReplCommand{
