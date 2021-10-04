@@ -121,10 +121,11 @@ mod tokens{
         }
     }
 }
-use tokens::*;
 mod tree{
     //TODO use a parse library
     use super::tokens::ReplTokens;
+    use std::io::Bytes;
+    use std::fs::File;
     #[derive(Debug)]
     struct ReplCommand{
         program:String,
@@ -135,7 +136,8 @@ mod tree{
         commands:Vec<ReplCommand>
     }
     impl ReplTree{
-        pub fn parse(mut tokens:ReplTokens)->ReplTree{
+        pub fn parse(bytes:Bytes<File>)->ReplTree{
+            let mut tokens=ReplTokens::tokenize(bytes);
             let tree=ReplTree{
                 commands:Vec::new()
             };
@@ -167,7 +169,7 @@ impl Display for ReplError{
 }
 ///Like repl but no loop
 fn rep(source:ReplSource)->Result<(),io::Error>{
-    Ok(eval(ReplTree::parse(ReplTokens::tokenize(read(source)?))))
+    Ok(eval(ReplTree::parse(read(source)?)))
 }
 /**
  * Run-Eval-Print-Loop.
