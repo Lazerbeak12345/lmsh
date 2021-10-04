@@ -2,21 +2,26 @@ use std::fmt::{Display,Formatter,Error};
 use std::io;
 mod source{
     use std::path::PathBuf;
-    use std::io::prelude::*;
-    use std::io::{Bytes,Error};
+    use std::io::Result as IOResult;
     use std::fs::File;
+    use std::io::BufReader;
+    use std::io::prelude::*;
     #[derive(Debug)]
     pub enum ReplSource{
         User,
         File(PathBuf)
     }
-    fn prompt()->Result<Bytes<File>,Error>{
+    fn prompt()->IOResult<String>{
         todo!("Prompt the user for code!")
     }
-    fn open(path:PathBuf)->Result<Bytes<File>,Error>{
-        Ok(File::open(path)?.bytes())
+    fn open(path:PathBuf)->IOResult<String>{
+        let file = File::open(path)?;
+        let mut buf_reader = BufReader::new(file);
+        let mut contents = String::new();
+        buf_reader.read_to_string(&mut contents)?;
+        Ok(contents)
     }
-    pub fn read(source:ReplSource)->Result<Bytes<File>,Error>{
+    pub fn read(source:ReplSource)->IOResult<String>{
         match source{
             ReplSource::User=>prompt(),
             ReplSource::File(path)=>open(path)
@@ -25,134 +30,26 @@ mod source{
 }
 pub use source::ReplSource;
 use source::*;
-mod tokens{
-    //TODO use a token library
-    use std::io::{Bytes,Error};
-    use std::fs::File;
-    use std::string::FromUtf8Error;
-    #[derive(Debug)]
-    pub enum ReplToken{
-        Literal(String),
-        Semicolon
-    }
-    pub struct ReplTokens{
-        bytes:Bytes<File>,
-        semicolon:bool
-    }
-    enum TokenLiteralError{
-        IO(Error),
-        Unicode(FromUtf8Error)
-    }
-    impl ReplTokens{
-        pub fn tokenize(bytes:Bytes<File>)->ReplTokens{
-            ReplTokens{
-                bytes,
-                semicolon:false
-            }
-        }
-        fn consume_comment(&mut self)->Result<(),Error>{
-            loop{
-                match self.bytes.next(){
-                    None=>return Ok(()),
-                    Some(Ok(b'\n'))=>return Ok(()),
-                    Some(Ok(..))=>{},
-                    Some(Err(err))=>return Err(err)
-                }
-            }
-        }
-        fn consume_literal(&mut self,first:u8)->Result<Option<ReplToken>,TokenLiteralError>{
-            let mut data=vec![first];
-            loop{
-                match self.bytes.next(){
-                    None|Some(Ok(b'\n'|b' '|b'\t'))=>break,
-                    Some(Ok(b';'))=>{
-                        self.semicolon=true;
-                        break
-                    },
-                    Some(Err(err))=>return Err(TokenLiteralError::IO(err)),
-                    Some(Ok(byte))=>data.push(byte)
-                }
-            }
-            match String::from_utf8(data){
-                Ok(data_as_str)=>return Ok(Some(ReplToken::Literal(data_as_str))),
-                Err(err)=>return Err(TokenLiteralError::Unicode(err))
-            }
-        }
-    }
-    impl Iterator for ReplTokens{
-        type Item = ReplToken;
-        fn next(&mut self)->Option<Self::Item>{
-            loop{ 
-                if self.semicolon{
-                    self.semicolon=false;
-                    return Some(ReplToken::Semicolon)
-                }
-                match self.bytes.next(){
-                    None=>return None,
-                    Some(Err(err))=>{
-                        eprintln!("Error while reading from file: {}",err);
-                        return None
-                    },
-                    Some(Ok(b'#'))=>match self.consume_comment(){
-                        Ok(())=>{},//Just ignore the comment
-                        Err(err)=>{
-                            eprintln!("Error while reading from file during comment: {}",err);
-                            return None
-                        }
-                    },
-                    Some(Ok(b'\n'|b' '|b'\t'))=>{},
-                    Some(Ok(quote@(b'\''|b'"')))=>todo!("Handle {}quotes",quote),
-                    Some(Ok(b'`'))=>todo!("Handle backticks"),
-                    Some(Ok(b'$'))=>todo!("Handle $ escape thingy"),
-                    Some(Ok(b';'))=>self.semicolon=true,
-                    Some(Ok(byte))=>return match self.consume_literal(byte){
-                        Ok(literal)=>literal,
-                        Err(TokenLiteralError::IO(err))=>{
-                            eprintln!("Error while reading from file during literal: {}",err);
-                            None
-                        },
-                        Err(TokenLiteralError::Unicode(err))=>{
-                            eprintln!("Error while converting literal to usable value: {}",err);
-                            None
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 mod tree{
-    //TODO use a parse library
-    use super::tokens::ReplTokens;
-    use std::io::Bytes;
-    use std::fs::File;
+    extern crate combine;
+    use combine::parser::char::char;
+    use combine::parser::range::take_until_range;
+    use combine::error::StringStreamError;
+    use combine::Parser;
     #[derive(Debug)]
-    struct ReplCommand{
-        program:String,
-        args:Vec<String>
+    pub enum Nodes{
+        Comment(String)
     }
-    #[derive(Debug)]
-    pub struct ReplTree{
-        commands:Vec<ReplCommand>
-    }
-    impl ReplTree{
-        pub fn parse(bytes:Bytes<File>)->ReplTree{
-            let mut tokens=ReplTokens::tokenize(bytes);
-            let tree=ReplTree{
-                commands:Vec::new()
-            };
-            loop{
-                match tokens.next(){
-                    Some(token)=>todo!("Match on token type {:?}",token),
-                    None=>break
-                }
-            }
-            tree
-        }
+    pub fn parse<'a>(string:String)->Result<(Nodes,String),StringStreamError>{
+        let mut comment=char('#').with(take_until_range("\n")).map(|chars|
+                                                                   Nodes::Comment(String::from(chars)));
+        let (nodes,string)=comment.parse(string.as_str())?;
+        Ok((nodes,String::from(string)))
     }
 }
 use tree::*;
-fn eval(tree:ReplTree){
+use combine::error::StringStreamError;
+fn eval(tree:Result<(Nodes,String),StringStreamError>){
     todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
@@ -169,7 +66,7 @@ impl Display for ReplError{
 }
 ///Like repl but no loop
 fn rep(source:ReplSource)->Result<(),io::Error>{
-    Ok(eval(ReplTree::parse(read(source)?)))
+    Ok(eval(parse(read(source)?)))
 }
 /**
  * Run-Eval-Print-Loop.
