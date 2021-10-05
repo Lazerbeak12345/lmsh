@@ -35,21 +35,24 @@ mod tree{
     use combine::parser::char::char;
     use combine::parser::range::take_until_range;
     use combine::error::StringStreamError;
-    use combine::Parser;
+    use combine::{many,Parser};
     #[derive(Debug)]
     pub enum Nodes{
         Comment(String)
     }
-    pub fn parse<'a>(string:String)->Result<(Nodes,String),StringStreamError>{
-        let mut comment=char('#').with(take_until_range("\n")).map(|chars|
-                                                                   Nodes::Comment(String::from(chars)));
-        let (nodes,string)=comment.parse(string.as_str())?;
+    pub fn parse<'a>(string:String)->Result<(Vec<Nodes>,String),StringStreamError>{
+        let comment=char('#')
+            .with(take_until_range("\n"))
+            .skip(many::<Vec<_>,_,_>(char('\n')))
+            .map(|string:&str|Nodes::Comment(String::from(string)));
+        let mut comments=many(comment);
+        let (nodes,string)=comments.parse(string.as_str())?;
         Ok((nodes,String::from(string)))
     }
 }
 use tree::*;
 use combine::error::StringStreamError;
-fn eval(tree:Result<(Nodes,String),StringStreamError>){
+fn eval(tree:Result<(Vec<Nodes>,String),StringStreamError>){
     todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
