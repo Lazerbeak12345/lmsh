@@ -33,7 +33,7 @@ use source::*;
 mod tree{
     extern crate combine;
     use combine::parser::char::char;
-    use combine::parser::range::take_until_range;
+    use combine::parser::repeat::take_until;
     use combine::error::StringStreamError;
     use combine::{many,Parser,many1};
     #[derive(Debug)]
@@ -42,8 +42,8 @@ mod tree{
     pub struct CommentBlock(Vec<Comment>);
     pub fn parse<'a>(string:String)->Result<(Vec<CommentBlock>,String),StringStreamError>{
         let comment=char('#')
-            .with(take_until_range("\n"))
-            .map(|string:&str|Comment(String::from(string)));
+            .with(take_until(char('\n')))
+            .map(|string:String|Comment(string));
         let comment_block=many1(comment.skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
             .map(|comments:Vec<Comment>|CommentBlock(comments));
