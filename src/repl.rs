@@ -35,24 +35,26 @@ mod tree{
     use combine::parser::char::char;
     use combine::parser::range::take_until_range;
     use combine::error::StringStreamError;
-    use combine::{many,Parser};
+    use combine::{many,Parser,many1};
     #[derive(Debug)]
-    pub enum Nodes{
-        Comment(String)
-    }
-    pub fn parse<'a>(string:String)->Result<(Vec<Nodes>,String),StringStreamError>{
+    pub struct Comment(String);
+    #[derive(Debug)]
+    pub struct CommentBlock(Vec<Comment>);
+    pub fn parse<'a>(string:String)->Result<(Vec<CommentBlock>,String),StringStreamError>{
         let comment=char('#')
             .with(take_until_range("\n"))
+            .map(|string:&str|Comment(String::from(string)));
+        let comment_block=many1(comment.skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
-            .map(|string:&str|Nodes::Comment(String::from(string)));
-        let mut comments=many(comment);
-        let (nodes,string)=comments.parse(string.as_str())?;
+            .map(|comments:Vec<Comment>|CommentBlock(comments));
+        let mut comment_blocks=many1(comment_block);
+        let(nodes,string)=comment_blocks.parse(string.as_str())?;
         Ok((nodes,String::from(string)))
     }
 }
 use tree::*;
 use combine::error::StringStreamError;
-fn eval(tree:Result<(Vec<Nodes>,String),StringStreamError>){
+fn eval(tree:Result<(Vec<CommentBlock>,String),StringStreamError>){
     todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
