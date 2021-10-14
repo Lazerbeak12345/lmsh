@@ -35,26 +35,34 @@ mod tree{
     use combine::parser::char::char;
     use combine::parser::repeat::take_until;
     use combine::error::StringStreamError;
-    use combine::{many,Parser,many1};
+    use combine::{many,Parser,many1,none_of};
     #[derive(Debug)]
     pub struct Comment(String);
     #[derive(Debug)]
-    pub struct CommentBlock(Vec<Comment>);
-    pub fn parse<'a>(string:String)->Result<(Vec<CommentBlock>,String),StringStreamError>{
+    pub enum Statement{
+        Word(String),//TODO a word is not a statement
+        CommentBlock(Vec<Comment>)
+    }
+    pub fn parse<'a>(string:String)->Result<(Vec<Statement>,String),StringStreamError>{
         let comment=char('#')
             .with(take_until(char('\n')))
             .map(|string:String|Comment(string));
         let comment_block=many1(comment.skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
-            .map(|comments:Vec<Comment>|CommentBlock(comments));
-        let mut comment_blocks=many1(comment_block);
-        let(nodes,string)=comment_blocks.parse(string.as_str())?;
+            .map(|comments:Vec<Comment>|
+                 Statement::CommentBlock(comments));
+        let word=many1::<String,_,_>(none_of(vec!['$','`','(',' ','\t',';']))
+            .map(|chars|
+                 Statement::Word(chars));
+        let statement=comment_block.or(word);
+        let mut statements=many(statement);
+        let(nodes,string)=statements.parse(string.as_str())?;
         Ok((nodes,String::from(string)))
     }
 }
 use tree::*;
 use combine::error::StringStreamError;
-fn eval(tree:Result<(Vec<CommentBlock>,String),StringStreamError>){
+fn eval(tree:Result<(Vec<Statement>,String),StringStreamError>){
     todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
