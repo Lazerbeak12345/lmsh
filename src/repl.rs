@@ -39,8 +39,10 @@ mod tree{
     #[derive(Debug)]
     pub struct Comment(String);
     #[derive(Debug)]
+    pub struct Word(String);
+    #[derive(Debug)]
     pub enum Statement{
-        Word(String),//TODO a word is not a statement
+        Word(Word),//TODO a word is not a statement
         CommentBlock(Vec<Comment>)
     }
     pub fn parse<'a>(string:String)->Result<(Vec<Statement>,String),StringStreamError>{
@@ -53,7 +55,7 @@ mod tree{
                  Statement::CommentBlock(comments));
         let word=many1::<String,_,_>(none_of(vec!['$','`','(',' ','\t',';']))
             .map(|chars|
-                 Statement::Word(chars));
+                 Statement::Word(Word(chars)));
         let statement=comment_block.or(word);
         let mut statements=many(statement);
         let(nodes,string)=statements.parse(string.as_str())?;
