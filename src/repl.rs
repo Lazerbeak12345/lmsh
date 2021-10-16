@@ -42,8 +42,11 @@ mod tree{
     pub struct Word(String);
     #[derive(Debug)]
     pub enum Statement{
-        Word(Word),//TODO a word is not a statement
-        CommentBlock(Vec<Comment>)
+        CommentBlock(Vec<Comment>),
+        Function{
+            name:Word,
+            statements:Vec<Statement>
+        }
     }
     pub fn parse<'a>(string:String)->Result<(Vec<Statement>,String),StringStreamError>{
         let comment=char('#')
@@ -55,8 +58,21 @@ mod tree{
                  Statement::CommentBlock(comments));
         let word=many1::<String,_,_>(none_of(vec!['$','`','(',' ','\t',';']))
             .map(|chars|
-                 Statement::Word(Word(chars)));
-        let statement=comment_block.or(word);
+                 Word(chars));
+        let function=word
+            .skip(many::<Vec<_>,_,_>(char(' ')).silent()
+                  //TODO
+                  //.with(char('('))
+                  /*.with(many::<Vec<_>,_,_>(char(' ')))
+                  .with(char(')'))
+                  .with(many::<Vec<_>,_,_>(char(' ')))
+                  .with(char('{'))*/)
+            .map(|a|
+                 Statement::Function{
+                     name:a,
+                     statements:vec![]
+                 });
+        let statement=comment_block.or(function);
         let mut statements=many(statement);
         let(nodes,string)=statements.parse(string.as_str())?;
         Ok((nodes,String::from(string)))
@@ -65,7 +81,12 @@ mod tree{
 use tree::*;
 use combine::error::StringStreamError;
 fn eval(tree:Result<(Vec<Statement>,String),StringStreamError>){
-    todo!("Run the code!{:?}",tree);
+    match tree{
+        Ok(tree)=>todo!("Run the code!{:?}",tree),
+        Err(StringStreamError::Eoi)=>todo!("Eoi error"),
+        Err(StringStreamError::UnexpectedParse)=>todo!("Unexpected parse"),
+        Err(StringStreamError::CharacterBoundary)=>todo!("Character boundary")
+    }
 }
 pub enum ReplError{
     ErrorCodes(Vec<i32>),
