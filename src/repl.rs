@@ -1,3 +1,4 @@
+use combine::stream::easy::{ParseError,Stream};
 use std::fmt::{Display,Formatter,Error};
 use std::io;
 mod source{
@@ -34,8 +35,8 @@ mod tree{
     extern crate combine;
     use combine::parser::char::char;
     use combine::parser::repeat::take_until;
-    use combine::error::StringStreamError;
-    use combine::{many,Parser,many1,none_of};
+    use combine::stream::easy::{ParseError,Stream};
+    use combine::{EasyParser,many,many1,none_of,Parser};
     #[derive(Debug)]
     pub struct Comment(String);
     #[derive(Debug)]
@@ -48,7 +49,7 @@ mod tree{
             statements:Vec<Statement>
         }
     }
-    pub fn parse<'a>(string:String)->Result<(Vec<Statement>,String),StringStreamError>{
+    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
         let comment=char('#')
             .with(take_until(char('\n')))
             .map(|string:String|Comment(string));
@@ -56,17 +57,17 @@ mod tree{
             .skip(many::<Vec<_>,_,_>(char('\n')))
             .map(|comments:Vec<Comment>|
                  Statement::CommentBlock(comments));
-        let word=many1::<String,_,_>(none_of(vec!['$','`','(',' ','\t',';']))
+        let word=many1(none_of(vec!['$','`','(',' ','\t',';']))
             .map(|chars|
                  Word(chars));
         let function=word
-            .skip(many::<Vec<_>,_,_>(char(' ')).silent()
+            .skip(many::<Vec<_>,_,_>(char(' '))
                   //TODO
-                  //.with(char('('))
-                  /*.with(many::<Vec<_>,_,_>(char(' ')))
+                  .with(char('('))
+                  .with(many::<Vec<_>,_,_>(char(' ')))
                   .with(char(')'))
                   .with(many::<Vec<_>,_,_>(char(' ')))
-                  .with(char('{'))*/)
+                  .with(char('{')))
             .map(|a|
                  Statement::Function{
                      name:a,
@@ -74,19 +75,12 @@ mod tree{
                  });
         let statement=comment_block.or(function);
         let mut statements=many(statement);
-        let(nodes,string)=statements.parse(string.as_str())?;
-        Ok((nodes,String::from(string)))
+        statements.easy_parse(str)
     }
 }
 use tree::*;
-use combine::error::StringStreamError;
-fn eval(tree:Result<(Vec<Statement>,String),StringStreamError>){
-    match tree{
-        Ok(tree)=>todo!("Run the code!{:?}",tree),
-        Err(StringStreamError::Eoi)=>todo!("Eoi error"),
-        Err(StringStreamError::UnexpectedParse)=>todo!("Unexpected parse"),
-        Err(StringStreamError::CharacterBoundary)=>todo!("Character boundary")
-    }
+fn eval<'a>(tree:Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>){
+    todo!("Run the code!{:?}",tree);
 }
 pub enum ReplError{
     ErrorCodes(Vec<i32>),
@@ -102,7 +96,7 @@ impl Display for ReplError{
 }
 ///Like repl but no loop
 fn rep(source:ReplSource)->Result<(),io::Error>{
-    Ok(eval(parse(read(source)?)))
+    Ok(eval(parse(&read(source)?)))
 }
 /**
  * Run-Eval-Print-Loop.
