@@ -1,3 +1,4 @@
+use combine::easy::Errors;
 use combine::stream::easy::{ParseError,Stream};
 use std::fmt::{Display,Formatter,Error};
 use std::io;
@@ -62,12 +63,12 @@ mod tree{
                  Word(chars));
         let function=word
             .skip(many::<Vec<_>,_,_>(char(' '))
-                  //TODO
                   .with(char('('))
                   .with(many::<Vec<_>,_,_>(char(' ')))
                   .with(char(')'))
                   .with(many::<Vec<_>,_,_>(char(' ')))
-                  .with(char('{')))
+                  .with(char('{'))
+                  .with(char('\n')))
             .map(|a|
                  Statement::Function{
                      name:a,
@@ -75,12 +76,18 @@ mod tree{
                  });
         let statement=comment_block.or(function);
         let mut statements=many(statement);
-        statements.easy_parse(str)
+        statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
 }
 use tree::*;
-fn eval<'a>(tree:Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>){
-    todo!("Run the code!{:?}",tree);
+fn eval<'a>(tree:Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>,str:&'a str){
+    match tree{
+        Ok(tree)=>todo!("Run the code! {:?}",tree),
+        Err(Errors{
+            position,
+            errors
+        })=>todo!("Handle error at position {:?} in the source\nMessages: {:?}",position.translate_position(str),errors)
+    }
 }
 pub enum ReplError{
     ErrorCodes(Vec<i32>),
@@ -96,7 +103,8 @@ impl Display for ReplError{
 }
 ///Like repl but no loop
 fn rep(source:ReplSource)->Result<(),io::Error>{
-    Ok(eval(parse(&read(source)?)))
+    let str=&read(source)?;
+    Ok(eval(parse(str),str))
 }
 /**
  * Run-Eval-Print-Loop.
