@@ -39,10 +39,8 @@ mod tree{
     use combine::stream::easy::{ParseError,Stream};
     use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
     #[derive(Debug)]
-    pub struct Word(String);
-    #[derive(Debug)]
     pub struct Function{
-        name:Word,
+        name:String,
         statements:Vec<Statement>
     }
     #[derive(Debug)]
@@ -63,10 +61,8 @@ mod tree{
         many1(comment())
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
-    fn word<Input>()->impl Parser<Input,Output=Word>where Input:StreamTrait<Token=char>{
+    fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         many1(none_of(vec!['$','`','(',' ','\t',';']))
-            .map(|string|
-                 Word(string))
     }
     fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
         word()
