@@ -85,13 +85,15 @@ mod tree{
                      statements:vec![]
                  })
     }
-    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        let statement=comment_block()
+    fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
+        comment_block()
             .map(|comment_block|
                  Statement::CommentBlock(comment_block))
             .or(function().map(|function|
-                               Statement::Function(function)));
-        let mut statements=many(statement);
+                               Statement::Function(function)))
+    }
+    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
+        let mut statements=many(statement());
         statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
 }
