@@ -83,12 +83,13 @@ mod tree{
                  })
     }
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
-        comment_block()
-            .map(|comment_block|
-                 Statement::CommentBlock(comment_block))
-            .or(function()
-                .map(|function|
-                     Statement::Function(function)))
+        many::<Vec<_>,_,_>(char(' '))
+            .with(comment_block()
+                  .map(|comment_block|
+                       Statement::CommentBlock(comment_block))
+                  .or(function()
+                      .map(|function|
+                           Statement::Function(function))))
     }
     parser!{
         fn statements[Input]()(Input)->Vec<Statement>where[Input:StreamTrait<Token=char>]{
