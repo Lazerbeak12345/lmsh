@@ -61,9 +61,10 @@ mod tree{
                  Comment(string))
     }
     fn comment_block<Input>()->impl Parser<Input,Output=CommentBlock>where Input:StreamTrait<Token=char>{
-        many1(comment().skip(char('\n')))
+        many1(comment()
+              .skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
-            .map(|comments:Vec<Comment>|
+            .map(|comments|
                  CommentBlock(comments))
     }
     fn word<Input>()->impl Parser<Input,Output=Word>where Input:StreamTrait<Token=char>{
@@ -72,13 +73,14 @@ mod tree{
                  Word(string))
     }
     fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
-        word().skip(many::<Vec<_>,_,_>(char(' '))
-                    .with(char('('))
-                    .with(many::<Vec<_>,_,_>(char(' ')))
-                    .with(char(')'))
-                    .with(many::<Vec<_>,_,_>(char(' ')))
-                    .with(char('{'))
-                    .with(char('\n')))
+        word()
+            .skip(many::<Vec<_>,_,_>(char(' '))
+                  .with(char('('))
+                  .with(many::<Vec<_>,_,_>(char(' ')))
+                  .with(char(')'))
+                  .with(many::<Vec<_>,_,_>(char(' ')))
+                  .with(char('{'))
+                  .with(char('\n')))
             .map(|a|
                  Function{
                      name:a,
@@ -89,14 +91,16 @@ mod tree{
         comment_block()
             .map(|comment_block|
                  Statement::CommentBlock(comment_block))
-            .or(function().map(|function|
-                               Statement::Function(function)))
+            .or(function()
+                .map(|function|
+                     Statement::Function(function)))
     }
     fn statements<Input>()->impl Parser<Input,Output=Vec<Statement>>where Input:StreamTrait<Token=char>{
         many(statement())
     }
     pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        statements().easy_parse(str)//TODO return something else, keeping the call to translate_position in here
+        //TODO return something else, keeping the call to translate_position in here
+        statements().easy_parse(str)
     }
 }
 use tree::*;
