@@ -41,10 +41,12 @@ mod tree{
     #[derive(Debug)]
     pub struct Comment(String);
     #[derive(Debug)]
+    pub struct CommentBlock(Vec<Comment>);
+    #[derive(Debug)]
     pub struct Word(String);
     #[derive(Debug)]
     pub enum Statement{
-        CommentBlock(Vec<Comment>),
+        CommentBlock(CommentBlock),
         Function{
             name:Word,
             statements:Vec<Statement>
@@ -65,7 +67,7 @@ mod tree{
         let comment_block=many1(comment().skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
             .map(|comments:Vec<Comment>|
-                 Statement::CommentBlock(comments));
+                 CommentBlock(comments));
         let function=word()
             .skip(many::<Vec<_>,_,_>(char(' '))
                   .with(char('('))
@@ -79,7 +81,10 @@ mod tree{
                      name:a,
                      statements:vec![]
                  });
-        let statement=comment_block.or(function);
+        let statement=comment_block
+            .map(|comment_block|
+                 Statement::CommentBlock(comment_block))
+            .or(function);
         let mut statements=many(statement);
         statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
