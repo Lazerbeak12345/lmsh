@@ -71,25 +71,26 @@ mod tree{
             .map(|string|
                  Word(string))
     }
-    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        let function=word()
-            .skip(many::<Vec<_>,_,_>(char(' '))
-                  .with(char('('))
-                  .with(many::<Vec<_>,_,_>(char(' ')))
-                  .with(char(')'))
-                  .with(many::<Vec<_>,_,_>(char(' ')))
-                  .with(char('{'))
-                  .with(char('\n')))
+    fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
+        word().skip(many::<Vec<_>,_,_>(char(' '))
+                    .with(char('('))
+                    .with(many::<Vec<_>,_,_>(char(' ')))
+                    .with(char(')'))
+                    .with(many::<Vec<_>,_,_>(char(' ')))
+                    .with(char('{'))
+                    .with(char('\n')))
             .map(|a|
                  Function{
                      name:a,
                      statements:vec![]
-                 });
+                 })
+    }
+    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
         let statement=comment_block()
             .map(|comment_block|
                  Statement::CommentBlock(comment_block))
-            .or(function.map(|function|
-                             Statement::Function(function)));
+            .or(function().map(|function|
+                               Statement::Function(function)));
         let mut statements=many(statement);
         statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
