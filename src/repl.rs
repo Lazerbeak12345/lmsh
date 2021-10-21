@@ -73,10 +73,13 @@ mod tree{
                   .with(many::<Vec<_>,_,_>(char(' ')))
                   .with(char('{'))
                   .with(char('\n')))
-            .map(|a|
+            .and(statements())
+            .skip(char('}')
+                  .with(char('\n')))
+            .map(|(word,statements)|
                  Function{
-                     name:a,
-                     statements:vec![]
+                     name:word,
+                     statements
                  })
     }
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
@@ -87,8 +90,15 @@ mod tree{
                 .map(|function|
                      Statement::Function(function)))
     }
-    fn statements<Input>()->impl Parser<Input,Output=Vec<Statement>>where Input:StreamTrait<Token=char>{
+    fn statements_<Input>()->impl Parser<Input,Output=Vec<Statement>>where Input:StreamTrait<Token=char>{
         many(statement())
+    }
+    parser!{
+        fn statements[Input]()(Input)->Vec<Statement>
+        where [Input: StreamTrait<Token = char>]
+        {
+            statements_()
+        }
     }
     pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
         //TODO return something else, keeping the call to translate_position in here
