@@ -58,16 +58,18 @@ mod tree{
             .map(|string|
                  Comment(string))
     }
+    fn comment_block<Input>()->impl Parser<Input,Output=CommentBlock>where Input:StreamTrait<Token=char>{
+        many1(comment().skip(char('\n')))
+            .skip(many::<Vec<_>,_,_>(char('\n')))
+            .map(|comments:Vec<Comment>|
+                 CommentBlock(comments))
+    }
     fn word<Input>()->impl Parser<Input,Output=Word>where Input:StreamTrait<Token=char>{
         many1(none_of(vec!['$','`','(',' ','\t',';']))
             .map(|string|
                  Word(string))
     }
     pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        let comment_block=many1(comment().skip(char('\n')))
-            .skip(many::<Vec<_>,_,_>(char('\n')))
-            .map(|comments:Vec<Comment>|
-                 CommentBlock(comments));
         let function=word()
             .skip(many::<Vec<_>,_,_>(char(' '))
                   .with(char('('))
@@ -81,7 +83,7 @@ mod tree{
                      name:a,
                      statements:vec![]
                  });
-        let statement=comment_block
+        let statement=comment_block()
             .map(|comment_block|
                  Statement::CommentBlock(comment_block))
             .or(function);
