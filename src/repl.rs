@@ -53,7 +53,8 @@ mod tree{
     fn comment<Input>()->impl Parser<Input,Output=Comment>where Input:StreamTrait<Token=char>{
         char('#')
             .with(take_until(char('\n')))
-            .map(|string:String|Comment(string))
+            .map(|string|
+                 Comment(string))
     }
     fn word<Input>()->impl Parser<Input,Output=Word>where Input:StreamTrait<Token=char>{
         many1(none_of(vec!['$','`','(',' ','\t',';']))
