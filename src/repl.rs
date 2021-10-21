@@ -92,9 +92,11 @@ mod tree{
             .or(function().map(|function|
                                Statement::Function(function)))
     }
+    fn statements<Input>()->impl Parser<Input,Output=Vec<Statement>>where Input:StreamTrait<Token=char>{
+        many(statement())
+    }
     pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        let mut statements=many(statement());
-        statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
+        statements().easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
 }
 use tree::*;
