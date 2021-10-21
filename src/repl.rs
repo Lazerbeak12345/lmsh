@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::char;
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{EasyParser,many,many1,none_of,Parser};
+    use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Comment(String);
     #[derive(Debug)]
@@ -50,11 +50,13 @@ mod tree{
             statements:Vec<Statement>
         }
     }
-    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
-        let comment=char('#')
+    fn comment<Input>()->impl Parser<Input,Output=Comment>where Input:StreamTrait<Token=char>{
+        char('#')
             .with(take_until(char('\n')))
-            .map(|string:String|Comment(string));
-        let comment_block=many1(comment.skip(char('\n')))
+            .map(|string:String|Comment(string))
+    }
+    pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
+        let comment_block=many1(comment().skip(char('\n')))
             .skip(many::<Vec<_>,_,_>(char('\n')))
             .map(|comments:Vec<Comment>|
                  Statement::CommentBlock(comments));
