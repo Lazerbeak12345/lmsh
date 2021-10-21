@@ -45,12 +45,14 @@ mod tree{
     #[derive(Debug)]
     pub struct Word(String);
     #[derive(Debug)]
+    pub struct Function{
+        name:Word,
+        statements:Vec<Statement>
+    }
+    #[derive(Debug)]
     pub enum Statement{
         CommentBlock(CommentBlock),
-        Function{
-            name:Word,
-            statements:Vec<Statement>
-        }
+        Function(Function)
     }
     fn comment<Input>()->impl Parser<Input,Output=Comment>where Input:StreamTrait<Token=char>{
         char('#')
@@ -79,14 +81,15 @@ mod tree{
                   .with(char('{'))
                   .with(char('\n')))
             .map(|a|
-                 Statement::Function{
+                 Function{
                      name:a,
                      statements:vec![]
                  });
         let statement=comment_block()
             .map(|comment_block|
                  Statement::CommentBlock(comment_block))
-            .or(function);
+            .or(function.map(|function|
+                             Statement::Function(function)));
         let mut statements=many(statement);
         statements.easy_parse(str)//TODO return something else, keeping the call to translate_position in here
     }
