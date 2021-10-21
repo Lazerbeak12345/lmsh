@@ -90,14 +90,9 @@ mod tree{
                 .map(|function|
                      Statement::Function(function)))
     }
-    fn statements_<Input>()->impl Parser<Input,Output=Vec<Statement>>where Input:StreamTrait<Token=char>{
-        many(statement())
-    }
     parser!{
-        fn statements[Input]()(Input)->Vec<Statement>
-        where [Input: StreamTrait<Token = char>]
-        {
-            statements_()
+        fn statements[Input]()(Input)->Vec<Statement>where[Input:StreamTrait<Token=char>]{
+            many(statement())
         }
     }
     pub fn parse<'a>(str:&'a str)->Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>{
