@@ -39,7 +39,7 @@ mod tree{
     use combine::stream::easy::{ParseError,Stream};
     use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
     #[derive(Debug)]
-    pub struct CommentBlock(Vec<String>);
+    pub struct CommentBlock(String);
     #[derive(Debug)]
     pub struct Word(String);
     #[derive(Debug)]
@@ -55,10 +55,14 @@ mod tree{
     fn comment<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         char('#')
             .with(take_until(char('\n')))
+            .and(char('\n'))
+            .map(|(mut left,right):(String,char)|{
+                 left.push(right);
+                 left
+            })
     }
     fn comment_block<Input>()->impl Parser<Input,Output=CommentBlock>where Input:StreamTrait<Token=char>{
-        many1(comment()
-              .skip(char('\n')))
+        many1(comment())
             .skip(many::<Vec<_>,_,_>(char('\n')))
             .map(|comments|
                  CommentBlock(comments))
