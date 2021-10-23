@@ -34,7 +34,7 @@ pub use source::ReplSource;
 use source::*;
 mod tree{
     extern crate combine;
-    use combine::parser::char::char;
+    use combine::parser::char::{char,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
     use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
@@ -44,9 +44,26 @@ mod tree{
         statements:Vec<Statement>
     }
     #[derive(Debug)]
+    pub enum ArgumentPart{
+        Text(String),
+        Escape(char),
+        DollarExpansion(Statement),
+        TildeExpansion(Statement),
+        DoubleQuote(Argument),
+        SingleQuote(Argument),
+    }
+    pub type Argument=Vec<ArgumentPart>;
+    #[derive(Debug)]
+    pub struct Case{
+        argument:Argument,
+        parts:Vec<(Argument,Vec<Statement>)>,
+        default:Option<Vec<Statement>>
+    }
+    #[derive(Debug)]
     pub enum Statement{
         CommentBlock(String),
-        Function(Function)
+        Function(Function),
+        Case(Case)
     }
     fn comment<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         char('#')
@@ -62,7 +79,7 @@ mod tree{
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
     fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
-        many1(none_of(vec!['$','`','(',' ','\t',';']))
+        many1(none_of(vec!['$','`','(',')',' ','\t',';']))
     }
     fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
         word()
@@ -82,11 +99,38 @@ mod tree{
                      statements
                  })
     }
+    fn doublequote<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
+        char('"')
+            .with(many(none_of(vec!['"','$','`'])))
+            .map(|text|
+                 vec![ArgumentPart::Text(text)])
+    }
+    fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
+        many(choice!(doublequote()
+                     .map(|doublequote|
+                          ArgumentPart::DoubleQuote(doublequote))
+                     ))
+    }
+    fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
+        string("case")
+            .with(char(' ')
+                  .or(char('\t')))
+            .with(argument())
+            .map(|argument|
+                 Case{
+                     argument,
+                     parts:vec![],
+                     default:None
+                 })
+    }
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
         many::<Vec<_>,_,_>(char(' '))
             .with(choice!(comment_block()
                               .map(|comment_block|
                                    Statement::CommentBlock(comment_block)),
+                          case()
+                            .map(|case|
+                                 Statement::Case(case)),
                           function()
                               .map(|function|
                                    Statement::Function(function))))
