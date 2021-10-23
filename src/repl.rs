@@ -65,17 +65,14 @@ mod tree{
         Function(Function),
         Case(Case)
     }
-    fn comment<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
-        char('#')
-            .with(take_until(char('\n')))
-            .and(char('\n'))
-            .map(|(mut left,right):(String,char)|{
-                 left.push(right);
-                 left
-            })
-    }
     fn comment_block<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
-        many1(comment())
+        many1(char('#')
+              .with(take_until(char('\n')))
+              .and(char('\n'))
+              .map(|(mut left,right):(String,char)|{
+                  left.push(right);
+                  left
+              }))
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
     fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
