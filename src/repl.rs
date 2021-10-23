@@ -76,7 +76,7 @@ mod tree{
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
     fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
-        many1(none_of(vec!['$','`','(',')',' ','\t',';']))
+        many1(none_of(vec!['$','\'','"','`','(',')',' ','\t',';']))
     }
     fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
         word()
