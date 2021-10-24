@@ -43,11 +43,60 @@ mod tree{
         name:String,
         statements:Vec<Statement>
     }
+    ///Docstrings for this enum copied from
+    ///https://www.tutorialspoint.com/unix/unix-shell-substitutions.htm
+    #[derive(Debug)]
+    pub enum Substitution{
+        /// ```
+        /// ${var}
+        /// ```
+        /// Subtitute the value of `var`.
+        Variable(String),
+        /// ```
+        /// ${var:-word}
+        /// ```
+        /// If `var` is null or unset, `word` is subtituted for `var`. The value of `var` does not
+        /// change.
+        VariableAElseB(String,String),
+        /// ```
+        /// ${var:=word}
+        /// ```
+        /// If `var` is null or unset, `var` is set to the value of `word`.
+        VariableAElseBSet(String,String),
+        /// ```
+        /// ${var:?message}
+        /// ```
+        /// If `var` is null or unset, `message` is printed to standard error. This checks that
+        /// variables are set correctly.
+        VariableAElseMessage(String,String),
+        /// ```
+        /// ${var:+word}
+        /// ```
+        /// If `var` is set, `word` is subtituted for `var`. The value of `var` does not change.
+        NotVariableAElseB(String,String)
+    }
+    #[derive(Debug)]
+    pub enum Expansion{
+        Statement(Statement),
+        Substitution(Substitution),
+    }
+    #[derive(Debug)]
+    pub enum StringEscapes{
+        Backslash,//\\
+        Alert,//\a
+        Backspace,//\b
+        SuppressTrailingNewline,//\c
+        FormFeed,//\f
+        NewLine,//\n
+        CarriageReturn,//\r
+        HorizontalTab,//\t
+        VerticalTab//\v
+    }
     #[derive(Debug)]
     pub enum ArgumentPart{
         Text(String),
-        Escape(char),
-        DollarExpansion(Statement),
+        Escape(StringEscapes),
+        DollarExpansion(Expansion),
         TildeExpansion(Statement),
         DoubleQuote(Argument),
         SingleQuote(Argument),
@@ -102,11 +151,26 @@ mod tree{
             .map(|text|
                  vec![ArgumentPart::Text(text)])
     }
+    fn subtitution<Input>()->impl Parser<Input,Output=Substitution>where Input:StreamTrait<Token=char>{
+        choice!(char('{')
+                .with(word())
+                .skip(char('}'))
+                .map(|word|
+                     Substitution::Variable(word)))
+    }
+    fn dollar_expansion<Input>()->impl Parser<Input,Output=Expansion>where Input:StreamTrait<Token=char>{
+        char('$')
+            .with(choice!(subtitution()
+                          .map(|subtitution|
+                               Expansion::Substitution(subtitution))))
+    }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
         many(choice!(doublequote()
                      .map(|doublequote|
-                          ArgumentPart::DoubleQuote(doublequote))
-                     ))
+                          ArgumentPart::DoubleQuote(doublequote)),
+                     dollar_expansion()
+                     .map(|dollar_expansion|
+                          ArgumentPart::DollarExpansion(dollar_expansion))))
     }
     fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
         string("case")
