@@ -105,8 +105,7 @@ mod tree{
     #[derive(Debug)]
     pub struct Case{
         argument:Argument,
-        parts:Vec<(Argument,Vec<Statement>)>,
-        default:Option<Vec<Statement>>
+        parts:Vec<(Argument,Vec<Statement>)>
     }
     #[derive(Debug)]
     pub enum Statement{
@@ -180,12 +179,37 @@ mod tree{
         string("case")
             .with(char(' ')
                   .or(char('\t')))
-            .with(argument())
-            .map(|argument|
+            .with(argument()
+                  .message("case requires an argument"))
+            .skip(char(' ')
+                  .or(char('\t')))
+            .skip(string("in")
+                  .message("case requires the in keyword"))
+            .skip(char(';')
+                  .or(char('\n'))
+                  .message("case requires a newline or semicolon after the in keyword"))
+            .skip(many::<String,_,_>(char(' ')
+                                     .or(char('\t'))))
+            .and(many1(argument()
+                       .message("case requries a pattern to match")
+                       .skip(char(')')
+                             .with(char('\n'))
+                             .message("case requires an end-parenthasis"))
+                       .and(statements()
+                            .message("case requires at least one statement")
+                            .skip(many::<String,_,_>(choice!(char(' '),
+                                                             char('\t'),
+                                                             char('\n')))
+                                  .with(string(";;"))
+                                  .skip(many::<String,_,_>(choice!(char(' '),
+                                                                   char('\t'),
+                                                                   char('\n'))))))))
+            .skip(string("esac")
+                  .message("case must be closed with an esac"))
+            .map(|(argument,parts)|
                  Case{
                      argument,
-                     parts:vec![],
-                     default:None
+                     parts
                  })
     }
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
