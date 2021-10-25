@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
+    use combine::{EasyParser,many,many1,none_of,optional,Parser,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
@@ -199,6 +199,35 @@ mod tree{
                      .map(|dollar_expansion|
                           ArgumentPart::DollarExpansion(dollar_expansion))))
     }
+    fn command<Input>()->impl Parser<Input,Output=Command>where Input:StreamTrait<Token=char>{
+        argument()
+            .skip(char(' ')
+                  .or(char('\t')))
+            .and(many(argument()
+                      .skip(optional(char(' ')
+                                     .or(char('\t'))))))
+            .map(|(program,arguments)|
+                 Command{
+                     program,
+                     arguments
+                 })
+    }
+    fn parse_if<Input>()->impl Parser<Input,Output=If>where Input:StreamTrait<Token=char>{
+        string("if")
+            .with(char(' ')
+                  .or(char('\t')))
+            .with(command())
+            .skip(string("then")
+                  .with(char('\n')))
+            .and(statements())
+            .skip(string("fi"))
+            .map(|(command,statements)|
+                 If::If{
+                     condition:command,
+                     statements,
+                     next:None
+                 })
+    }
     fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
         string("case")
             .with(char(' ')
@@ -244,6 +273,9 @@ mod tree{
                           case()
                             .map(|case|
                                  Statement::Case(case)),
+                          parse_if()
+                          .map(|parse_if|
+                               Statement::If(parse_if)),
                           function()
                               .map(|function|
                                    Statement::Function(function))))
