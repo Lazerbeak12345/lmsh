@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{EasyParser,many,many1,none_of,optional,Parser,Stream as StreamTrait};
+    use combine::{attempt,EasyParser,many,many1,none_of,optional,Parser,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
@@ -124,12 +124,18 @@ mod tree{
         }
     }
     #[derive(Debug)]
+    pub struct Variable{
+        name:String,
+        command:Command
+    }
+    #[derive(Debug)]
     pub enum Statement{
         CommentBlock(String),
         Function(Function),
         Case(Case),
         If(If),
-        Command(Command)
+        Command(Command),
+        Variable(Variable)
     }
     fn comment_block<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         many1(char('#')
@@ -198,6 +204,16 @@ mod tree{
                      dollar_expansion()
                      .map(|dollar_expansion|
                           ArgumentPart::DollarExpansion(dollar_expansion))))
+    }
+    fn variable<Input>()->impl Parser<Input,Output=Variable>where Input:StreamTrait<Token=char>{
+        word()
+            .skip(char('='))
+            .and(command())
+            .map(|(word,command)|
+                 Variable{
+                     name:word,
+                     command
+                 })
     }
     fn command<Input>()->impl Parser<Input,Output=Command>where Input:StreamTrait<Token=char>{
         argument()
@@ -276,6 +292,9 @@ mod tree{
                           parse_if()
                           .map(|parse_if|
                                Statement::If(parse_if)),
+                          attempt(variable()
+                                  .map(|variable|
+                                       Statement::Variable(variable))),
                           function()
                               .map(|function|
                                    Statement::Function(function))))
