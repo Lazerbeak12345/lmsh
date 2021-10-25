@@ -34,7 +34,7 @@ pub use source::ReplSource;
 use source::*;
 mod tree{
     extern crate combine;
-    use combine::parser::char::{char,string};
+    use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
     use combine::{EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
@@ -159,7 +159,10 @@ mod tree{
                 .with(word())
                 .skip(char('}'))
                 .map(|word|
-                     Substitution::Variable(word)))
+                     Substitution::Variable(word)),
+                digit()
+                .map(|digit|
+                     Substitution::Variable(String::from(digit))))
     }
     fn dollar_expansion<Input>()->impl Parser<Input,Output=Expansion>where Input:StreamTrait<Token=char>{
         char('$')
