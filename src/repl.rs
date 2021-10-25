@@ -196,7 +196,7 @@ mod tree{
                                Expansion::Substitution(subtitution))))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
-        many(choice!(many1(none_of(vec!['"','$','\'','\\','`',';']))
+        many(choice!(many1(none_of(vec!['"','$','\'','\\','`',';','\n',' ','\t']))
                      .map(|text|
                           ArgumentPart::Text(text)),
                      doublequote()
