@@ -168,7 +168,10 @@ mod tree{
                                Expansion::Substitution(subtitution))))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
-        many(choice!(doublequote()
+        many(choice!(many1(none_of(vec!['"','$','\'','\\']))
+                     .map(|text|
+                          ArgumentPart::Text(text)),
+                     doublequote()
                      .map(|doublequote|
                           ArgumentPart::DoubleQuote(doublequote)),
                      dollar_expansion()
