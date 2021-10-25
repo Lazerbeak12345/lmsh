@@ -108,10 +108,28 @@ mod tree{
         parts:Vec<(Argument,Vec<Statement>)>
     }
     #[derive(Debug)]
+    pub struct Command{
+        program:Argument,
+        arguments:Vec<Argument>
+    }
+    #[derive(Debug)]
+    pub enum If{
+        If{
+            condition:Command,
+            statements:Vec<Statement>,
+            next:Option<Box<If>>
+        },
+        Else{
+            statements:Vec<Statement>
+        }
+    }
+    #[derive(Debug)]
     pub enum Statement{
         CommentBlock(String),
         Function(Function),
-        Case(Case)
+        Case(Case),
+        If(If),
+        Command(Command)
     }
     fn comment_block<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         many1(char('#')
