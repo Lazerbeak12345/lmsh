@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{attempt,EasyParser,many,many1,none_of,optional,Parser,Stream as StreamTrait};
+    use combine::{attempt,EasyParser,many,many1,none_of,Parser,sep_by,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
@@ -126,7 +126,7 @@ mod tree{
     #[derive(Debug)]
     pub struct Variable{
         name:String,
-        command:Command
+        content:Vec<Argument>
     }
     #[derive(Debug)]
     pub enum Statement{
@@ -179,14 +179,15 @@ mod tree{
             .skip(char('"'))
     }
     fn subtitution<Input>()->impl Parser<Input,Output=Substitution>where Input:StreamTrait<Token=char>{
-        choice!(char('{')
-                .with(word())
-                .skip(char('}'))
-                .map(|word|
-                     Substitution::Variable(word)),
-                digit()
+        choice!(digit()
                 .map(|digit|
-                     Substitution::Variable(String::from(digit))))
+                     Substitution::Variable(String::from(digit))),
+                choice!(char('{')
+                        .with(word())
+                        .skip(char('}')),
+                        word())
+                .map(|word|
+                     Substitution::Variable(word)))
     }
     fn dollar_expansion<Input>()->impl Parser<Input,Output=Expansion>where Input:StreamTrait<Token=char>{
         char('$')
@@ -195,7 +196,7 @@ mod tree{
                                Expansion::Substitution(subtitution))))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
-        many(choice!(many1(none_of(vec!['"','$','\'','\\']))
+        many(choice!(many1(none_of(vec!['"','$','\'','\\','`',';']))
                      .map(|text|
                           ArgumentPart::Text(text)),
                      doublequote()
@@ -208,20 +209,22 @@ mod tree{
     fn variable<Input>()->impl Parser<Input,Output=Variable>where Input:StreamTrait<Token=char>{
         word()
             .skip(char('='))
-            .and(command())
-            .map(|(word,command)|
+            .and(many1(argument()))
+            .map(|(word,content)|
                  Variable{
                      name:word,
-                     command
+                     content
                  })
     }
     fn command<Input>()->impl Parser<Input,Output=Command>where Input:StreamTrait<Token=char>{
         argument()
             .skip(char(' ')
                   .or(char('\t')))
-            .and(many(argument()
-                      .skip(optional(char(' ')
-                                     .or(char('\t'))))))
+            .and(sep_by(argument(),
+                        char(' ')
+                        .or(char('\t'))))
+            .skip(char(';')
+                  .or(char('\n')))
             .map(|(program,arguments)|
                  Command{
                      program,
