@@ -148,7 +148,7 @@ mod tree{
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
     fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
-        many1(none_of(vec!['$','\'','"','`','(',')',' ','\t',';','}']))
+        many1(none_of(vec!['$','\'','"','`','(',')',' ','\t',';','}','\\','\n']))
     }
     fn function<Input>()->impl Parser<Input,Output=Function>where Input:StreamTrait<Token=char>{
         word()
@@ -196,9 +196,9 @@ mod tree{
                                Expansion::Substitution(subtitution))))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
-        many(choice!(many1(none_of(vec!['"','$','\'','\\','`',';','\n',' ','\t']))
-                     .map(|text|
-                          ArgumentPart::Text(text)),
+        many(choice!(word()
+                     .map(|word|
+                          ArgumentPart::Text(word)),
                      doublequote()
                      .map(|doublequote|
                           ArgumentPart::DoubleQuote(doublequote)),
