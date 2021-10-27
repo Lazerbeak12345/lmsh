@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{attempt,EasyParser,many,many1,none_of,optional,Parser,sep_by,Stream as StreamTrait};
+    use combine::{attempt,EasyParser,many,many1,none_of,Parser,sep_by,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
@@ -105,7 +105,7 @@ mod tree{
     #[derive(Debug)]
     pub struct Case{
         argument:Argument,
-        parts:Vec<(Argument,Option<Vec<Statement>>)>
+        parts:Vec<(Argument,Vec<Statement>)>
     }
     #[derive(Debug)]
     pub struct Command{
@@ -267,7 +267,7 @@ mod tree{
                        .skip(char(')')
                              .with(char('\n'))
                              .message("case requires an end-parenthasis"))
-                       .and(optional(statements()))
+                       .and(statements())
                        .skip(many::<String,_,_>(choice!(char(' '),
                                                         char('\t'),
                                                         char('\n')))
