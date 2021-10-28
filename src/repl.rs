@@ -303,14 +303,18 @@ mod tree{
                           .message("Must be valid if block")
                           .map(|parse_if|
                                Statement::If(parse_if)),
-                          attempt(variable()
-                                  .message("Must be valid variable definition")
-                                  .map(|variable|
-                                       Statement::Variable(variable))),
-                          function()
-                          .message("Must be valid funtion definition")
+                          attempt(variable())
+                          .message("Must be valid variable definition")//TODO does this message even display?
+                          .map(|variable|
+                               Statement::Variable(variable)),
+                          attempt(function())
+                          .message("Must be valid function definition")
                           .map(|function|
-                               Statement::Function(function))))
+                               Statement::Function(function)),
+                          command()
+                          .message("Must be valid command")
+                          .map(|command|
+                               Statement::Command(command))))
             .message("A statement must be a comment, case, if, variable, or function")
     }
     parser!{
