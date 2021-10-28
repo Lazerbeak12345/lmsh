@@ -292,20 +292,26 @@ mod tree{
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
         many::<Vec<_>,_,_>(char(' '))
             .with(choice!(comment_block()
-                              .map(|comment_block|
-                                   Statement::CommentBlock(comment_block)),
+                          .message("Must be valid comment block")
+                          .map(|comment_block|
+                               Statement::CommentBlock(comment_block)),
                           case()
-                            .map(|case|
-                                 Statement::Case(case)),
+                          .message("Must be valid case block")
+                          .map(|case|
+                               Statement::Case(case)),
                           parse_if()
+                          .message("Must be valid if block")
                           .map(|parse_if|
                                Statement::If(parse_if)),
                           attempt(variable()
+                                  .message("Must be valid variable definition")
                                   .map(|variable|
                                        Statement::Variable(variable))),
                           function()
-                              .map(|function|
-                                   Statement::Function(function))))
+                          .message("Must be valid funtion definition")
+                          .map(|function|
+                               Statement::Function(function))))
+            .message("A statement must be a comment, case, if, variable, or function")
     }
     parser!{
         fn statements[Input]()(Input)->Vec<Statement>where[Input:StreamTrait<Token=char>]{
