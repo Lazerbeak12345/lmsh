@@ -216,6 +216,10 @@ mod tree{
                      content
                  })
     }
+    fn space_or_tab<Input>()->impl Parser<Input,Output=char>where Input:StreamTrait<Token=char>{
+        char(' ')
+            .or(char('\t'))
+    }
     fn command<Input>()->impl Parser<Input,Output=Command>where Input:StreamTrait<Token=char>{
         argument()
             .skip(char(' ')
@@ -223,6 +227,7 @@ mod tree{
             .and(sep_by(argument(),
                         char(' ')
                         .or(char('\t'))))
+            .skip(many::<String,_,_>(space_or_tab()))
             .skip(char(';')
                   .or(char('\n')))
             .map(|(program,arguments)|
@@ -248,9 +253,6 @@ mod tree{
                  })
     }
     fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
-        let space_or_tab=||
-            char(' ')
-            .or(char('\t'));
         let many_space_tab_or_nl=||
             many::<String,_,_>(choice!(char(' '),
                                        char('\t'),
