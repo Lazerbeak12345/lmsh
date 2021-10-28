@@ -275,7 +275,7 @@ mod tree{
                        .skip(char(')')
                              .skip(char('\n'))
                              .message("case requires an end-parenthasis"))
-                       .and(choice!(case_block_ender()
+                       .and(choice!(attempt(case_block_ender())
                                     .map(|_|
                                          vec![]),//It's supposed to be able to ignore a lack of statements, but this hack should work.
                                     statements()
