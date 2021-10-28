@@ -307,14 +307,14 @@ mod tree{
                           .message("Must be valid variable definition")//TODO does this message even display?
                           .map(|variable|
                                Statement::Variable(variable)),
-                          attempt(function())
-                          .message("Must be valid function definition")
-                          .map(|function|
-                               Statement::Function(function)),
-                          command()
+                          attempt(command())
                           .message("Must be valid command")
                           .map(|command|
-                               Statement::Command(command))))
+                               Statement::Command(command)),
+                          function()
+                          .message("Must be valid function definition")
+                          .map(|function|
+                               Statement::Function(function))))
             .message("A statement must be a comment, case, if, variable, or function")
     }
     parser!{
