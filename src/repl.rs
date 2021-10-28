@@ -248,33 +248,33 @@ mod tree{
                  })
     }
     fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
+        let space_or_tab=||
+            char(' ')
+            .or(char('\t'));
+        let many_space_tab_or_nl=||
+            many::<String,_,_>(choice!(char(' '),
+                                       char('\t'),
+                                       char('\n')));
         string("case")
-            .with(char(' ')
-                  .or(char('\t')))
+            .skip(space_or_tab())
             .with(argument()
                   .message("case requires an argument"))
-            .skip(char(' ')
-                  .or(char('\t')))
+            .skip(space_or_tab())
             .skip(string("in")
                   .message("case requires the in keyword"))
             .skip(char(';')
                   .or(char('\n'))
                   .message("case requires a newline or semicolon after the in keyword"))
-            .skip(many::<String,_,_>(char(' ')
-                                     .or(char('\t'))))
+            .skip(many::<String,_,_>(space_or_tab()))
             .and(many1(argument()
                        .message("case requries a pattern to match")
                        .skip(char(')')
-                             .with(char('\n'))
+                             .skip(char('\n'))
                              .message("case requires an end-parenthasis"))
                        .and(statements())
-                       .skip(many::<String,_,_>(choice!(char(' '),
-                                                        char('\t'),
-                                                        char('\n')))
+                       .skip(many_space_tab_or_nl()
                              .with(string(";;"))
-                             .skip(many::<String,_,_>(choice!(char(' '),
-                                                              char('\t'),
-                                                              char('\n')))))))
+                             .skip(many_space_tab_or_nl()))))
             .skip(string("esac")
                   .message("case must be closed with an esac"))
             .map(|(argument,parts)|
