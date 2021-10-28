@@ -255,6 +255,10 @@ mod tree{
             many::<String,_,_>(choice!(char(' '),
                                        char('\t'),
                                        char('\n')));
+        let case_block_ender=||
+            many_space_tab_or_nl()
+            .with(string(";;"))
+            .skip(many_space_tab_or_nl());
         string("case")
             .skip(space_or_tab())
             .with(argument()
@@ -271,10 +275,12 @@ mod tree{
                        .skip(char(')')
                              .skip(char('\n'))
                              .message("case requires an end-parenthasis"))
-                       .and(statements())
-                       .skip(many_space_tab_or_nl()
-                             .with(string(";;"))
-                             .skip(many_space_tab_or_nl()))))
+                       .and(choice!(case_block_ender()
+                                    .map(|_|
+                                         vec![]),//It's supposed to be able to ignore a lack of statements, but this hack should work.
+                                    statements()
+                                    .message("Must be a valid statement, or none at all.")
+                                    .skip(case_block_ender())))))
             .skip(string("esac")
                   .message("case must be closed with an esac"))
             .map(|(argument,parts)|
