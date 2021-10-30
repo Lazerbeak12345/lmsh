@@ -238,9 +238,9 @@ mod tree{
     }
     fn parse_if<Input>()->impl Parser<Input,Output=If>where Input:StreamTrait<Token=char>{
         string("if")
-            .with(char(' ')
-                  .or(char('\t')))
+            .skip(space_or_tab())
             .with(command())
+            .skip(many::<String,_,_>(space_or_tab()))
             .skip(string("then")
                   .with(char('\n')))
             .and(statements())
