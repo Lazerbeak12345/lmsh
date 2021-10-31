@@ -212,12 +212,15 @@ mod tree{
     fn variable<Input>()->impl Parser<Input,Output=Variable>where Input:StreamTrait<Token=char>{
         variable_name()
             .skip(char('='))
-            .and(many1(argument()))
-            .map(|(word,content)|
-                 Variable{
-                     name:word,
-                     content
-                 })
+            .and(command())
+            .map(|(word,mut command)|{
+                let mut content=vec![command.program];
+                content.append(&mut command.arguments);
+                Variable{
+                    name:word,
+                    content
+                }
+            })
     }
     fn space_or_tab<Input>()->impl Parser<Input,Output=char>where Input:StreamTrait<Token=char>{
         char(' ')
