@@ -225,11 +225,8 @@ mod tree{
     }
     fn command<Input>()->impl Parser<Input,Output=Command>where Input:StreamTrait<Token=char>{
         argument()
-            .skip(char(' ')
-                  .or(char('\t')))
-            .and(sep_by(argument(),
-                        char(' ')
-                        .or(char('\t'))))
+            .and(many(attempt(many::<String,_,_>(space_or_tab())
+                              .with(argument()))))
             .skip(many::<String,_,_>(space_or_tab()))
             .skip(char(';')
                   .or(char('\n')))
