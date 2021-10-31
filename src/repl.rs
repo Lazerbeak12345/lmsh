@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{attempt,EasyParser,many,many1,none_of,Parser,sep_by,Stream as StreamTrait};
+    use combine::{attempt,EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
