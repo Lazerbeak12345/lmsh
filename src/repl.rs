@@ -147,6 +147,9 @@ mod tree{
               }))
             .skip(many::<Vec<_>,_,_>(char('\n')))
     }
+    fn variable_name<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
+        many1(none_of(vec!['$','\'','"','`','(',')',' ','\t',';','}','\\','\n','=',':']))
+    }
     fn word<Input>()->impl Parser<Input,Output=String>where Input:StreamTrait<Token=char>{
         many1(none_of(vec!['$','\'','"','`','(',')',' ','\t',';','}','\\','\n']))
     }
@@ -183,9 +186,9 @@ mod tree{
                 .map(|digit|
                      Substitution::Variable(String::from(digit))),
                 choice!(char('{')
-                        .with(word())
+                        .with(variable_name())
                         .skip(char('}')),
-                        word())
+                        variable_name())
                 .map(|word|
                      Substitution::Variable(word)))
     }
@@ -196,18 +199,18 @@ mod tree{
                                Expansion::Substitution(subtitution))))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
-        many(choice!(word()
-                     .map(|word|
-                          ArgumentPart::Text(word)),
-                     doublequote()
-                     .map(|doublequote|
-                          ArgumentPart::DoubleQuote(doublequote)),
-                     dollar_expansion()
-                     .map(|dollar_expansion|
-                          ArgumentPart::DollarExpansion(dollar_expansion))))
+        many1(choice!(word()
+                      .map(|word|
+                           ArgumentPart::Text(word)),
+                      doublequote()
+                      .map(|doublequote|
+                           ArgumentPart::DoubleQuote(doublequote)),
+                      dollar_expansion()
+                      .map(|dollar_expansion|
+                           ArgumentPart::DollarExpansion(dollar_expansion))))
     }
     fn variable<Input>()->impl Parser<Input,Output=Variable>where Input:StreamTrait<Token=char>{
-        word()
+        variable_name()
             .skip(char('='))
             .and(many1(argument()))
             .map(|(word,content)|
