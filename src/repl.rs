@@ -341,10 +341,10 @@ use tree::*;
 fn eval<'a>(tree:Result<(Vec<Statement>,&'a str),ParseError<Stream<&'a str>>>,str:&'a str){
     match tree{
         Ok(tree)=>todo!("Run the code! {:?}",tree),
-        Err(Errors{
-            position,
-            errors
-        })=>todo!("Handle error at position {:?} in the source\nMessages: {:?}",position.translate_position(str),errors)
+        Err(errors)=>{
+            let Errors{position,..}=errors;
+            todo!("Handle error at position {:?} in the source\n\nMessages: {}\n",position.translate_position(str),errors)
+        }
     }
 }
 pub enum ReplError{
