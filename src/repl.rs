@@ -174,11 +174,9 @@ mod tree{
     fn doublequote<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
         char('"')
             .with(many(choice!(many1(none_of(vec!['"','$','`']))
-                               .map(|text:String|
-                                    ArgumentPart::Text(text)),
+                               .map(ArgumentPart::Text),
                                dollar_expansion()
-                               .map(|dollar_expansion|
-                                    ArgumentPart::DollarExpansion(dollar_expansion)))))
+                               .map(ArgumentPart::DollarExpansion))))
             .skip(char('"'))
     }
     fn subtitution<Input>()->impl Parser<Input,Output=Substitution>where Input:StreamTrait<Token=char>{
@@ -189,35 +187,30 @@ mod tree{
                         .with(variable_name())
                         .skip(char('}')),
                         variable_name())
-                .map(|word|
-                     Substitution::Variable(word)))
+                .map(Substitution::Variable))
     }
     fn dollar_expansion<Input>()->impl Parser<Input,Output=Expansion>where Input:StreamTrait<Token=char>{
         char('$')
             .with(choice!(subtitution()
-                          .map(|subtitution|
-                               Expansion::Substitution(subtitution))))
+                          .map(Expansion::Substitution)))
     }
     fn argument<Input>()->impl Parser<Input,Output=Argument>where Input:StreamTrait<Token=char>{
         many1(choice!(word()
-                      .map(|word|
-                           ArgumentPart::Text(word)),
+                      .map(ArgumentPart::Text),
                       doublequote()
-                      .map(|doublequote|
-                           ArgumentPart::DoubleQuote(doublequote)),
+                      .map(ArgumentPart::DoubleQuote),
                       dollar_expansion()
-                      .map(|dollar_expansion|
-                           ArgumentPart::DollarExpansion(dollar_expansion))))
+                      .map(ArgumentPart::DollarExpansion)))
     }
     fn variable<Input>()->impl Parser<Input,Output=Variable>where Input:StreamTrait<Token=char>{
         variable_name()
             .skip(char('='))
             .and(command())
-            .map(|(word,mut command)|{
+            .map(|(name,mut command)|{
                 let mut content=vec![command.program];
                 content.append(&mut command.arguments);
                 Variable{
-                    name:word,
+                    name,
                     content
                 }
             })
@@ -302,30 +295,18 @@ mod tree{
     fn statement<Input>()->impl Parser<Input,Output=Statement>where Input:StreamTrait<Token=char>{
         many::<Vec<_>,_,_>(char(' '))
             .with(choice!(comment_block()
-                          .message("Must be valid comment block")
-                          .map(|comment_block|
-                               Statement::CommentBlock(comment_block)),
+                          .map(Statement::CommentBlock),
                           case()
-                          .message("Must be valid case block")
-                          .map(|case|
-                               Statement::Case(case)),
+                          .map(Statement::Case),
                           parse_if()
-                          .message("Must be valid if block")
-                          .map(|parse_if|
-                               Statement::If(parse_if)),
+                          .map(Statement::If),
                           attempt(variable())
-                          .message("Must be valid variable definition")//TODO does this message even display?
-                          .map(|variable|
-                               Statement::Variable(variable)),
+                          .map(Statement::Variable),
                           attempt(command())
-                          .message("Must be valid command")
-                          .map(|command|
-                               Statement::Command(command)),
+                          .map(Statement::Command),
                           function()
-                          .message("Must be valid function definition")
-                          .map(|function|
-                               Statement::Function(function))))
-            .message("A statement must be a comment, case, if, variable, or function")
+                          .map(Statement::Function)))
+           .message("A statement must be a comment, case, if, variable, or function")
     }
     parser!{
         fn statements[Input]()(Input)->Vec<Statement>where[Input:StreamTrait<Token=char>]{
