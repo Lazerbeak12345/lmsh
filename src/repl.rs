@@ -37,7 +37,7 @@ mod tree{
     use combine::parser::char::{char,digit,string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError,Stream};
-    use combine::{attempt,EasyParser,many,many1,none_of,Parser,Stream as StreamTrait};
+    use combine::{attempt,EasyParser,many,many1,none_of,optional,Parser,Stream as StreamTrait};
     #[derive(Debug)]
     pub struct Function{
         name:String,
@@ -239,6 +239,10 @@ mod tree{
                      arguments
                  })
     }
+    fn parse_elif_else<Input>()->impl Parser<Input,Output=Box<If>>where Input:StreamTrait<Token=char>{
+        choice!(string("elif").map(|_|todo!("parse elif block")),
+                string("else").map(|_|todo!("parse else block")))
+    }
     fn parse_if<Input>()->impl Parser<Input,Output=If>where Input:StreamTrait<Token=char>{
         string("if")
             .skip(space_or_tab())
@@ -247,12 +251,13 @@ mod tree{
             .skip(string("then")
                   .with(char('\n')))
             .and(statements())
+            .and(optional(parse_elif_else()))
             .skip(string("fi"))
-            .map(|(command,statements)|
+            .map(|((command,statements),next)|
                  If::If{
                      condition:command,
                      statements,
-                     next:None
+                     next
                  })
     }
     fn case<Input>()->impl Parser<Input,Output=Case>where Input:StreamTrait<Token=char>{
