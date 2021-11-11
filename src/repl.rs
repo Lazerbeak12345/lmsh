@@ -47,29 +47,29 @@ mod tree{
     ///https://www.tutorialspoint.com/unix/unix-shell-substitutions.htm
     #[derive(Debug)]
     pub enum Substitution{
-        /// ```
+        /// ```sh
         /// ${var}
         /// ```
         /// Subtitute the value of `var`.
         Variable(String),
-        /// ```
+        /// ```sh
         /// ${var:-word}
         /// ```
         /// If `var` is null or unset, `word` is subtituted for `var`. The value of `var` does not
         /// change.
         VariableAElseB(String,String),
-        /// ```
+        /// ```sh
         /// ${var:=word}
         /// ```
         /// If `var` is null or unset, `var` is set to the value of `word`.
         VariableAElseBSet(String,String),
-        /// ```
+        /// ```sh
         /// ${var:?message}
         /// ```
         /// If `var` is null or unset, `message` is printed to standard error. This checks that
         /// variables are set correctly.
         VariableAElseMessage(String,String),
-        /// ```
+        /// ```sh
         /// ${var:+word}
         /// ```
         /// If `var` is set, `word` is subtituted for `var`. The value of `var` does not change.
