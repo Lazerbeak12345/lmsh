@@ -28,7 +28,7 @@ fn main(){
                 Ok(())=>return,
                 Err(err)=>{
                     //The message should be given to the user directly.
-                    panic!("The repl should never return an error in user mode. In user mode {}.",err)
+                    unreachable!("The repl should never return an error in user mode. In user mode {}.",err)
                 }
             }
         }
