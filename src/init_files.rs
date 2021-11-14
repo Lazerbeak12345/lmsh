@@ -2,6 +2,10 @@ use crate::repl::{repl, ReplSource};
 use std::env::{split_paths, var_os};
 use std::io::Error;
 use std::path::PathBuf;
+#[test]
+fn get_config_file_test(){
+    todo!("Mock 'var_os' and 'PathBuf::exists', call 'get_config_file' then assert on the return")
+}
 fn get_config_file() -> Option<PathBuf> {
     let home_config_vec = match var_os("HOME") {
         Some(val) => {
@@ -31,8 +35,16 @@ fn get_config_file() -> Option<PathBuf> {
     .filter(|path| path.exists())
     .next() //We want to run only the first file.
 }
+#[test]
+fn run_config_file_test(){
+    todo!("Mock 'get_config_file' and 'repl' then assert on the return")
+}
 fn run_config_file() -> Option<Result<(), Error>> {
     get_config_file().and_then(|config_file| Some(repl(ReplSource::File(config_file))))
+}
+#[test]
+fn run_profile_test(){
+    todo!("Mock 'PathBuf::exists' and 'repl' then assert on the return")
 }
 fn run_profile() -> Option<Result<(), Error>> {
     let usr_profile = PathBuf::from("/etc/profile");
@@ -41,6 +53,10 @@ fn run_profile() -> Option<Result<(), Error>> {
     } else {
         None
     }
+}
+#[test]
+fn run_init_files_test(){
+    todo!("Mock 'run_profile' and 'run_config_file' then assert on the return")
 }
 //TODO give the user a bare-minimum working shell instead of bailing
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
