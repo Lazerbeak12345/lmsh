@@ -12,7 +12,7 @@ fn main() {
     });
     if args.version {
         greet();
-        println!("version 0.1.0")
+        println!("version {}",env!("CARGO_PKG_VERSION"))
     } else {
         match run_init_files(args.login) {
             Some(Ok(())) => {}
