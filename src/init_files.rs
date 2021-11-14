@@ -42,9 +42,12 @@ fn run_profile() -> Option<Result<(), Error>> {
         None
     }
 }
-#[test]
-fn run_init_files_test(){
-    todo!("Mock 'PathBuf::exists', 'repl' and 'var_os' and then assert on the return")
+#[cfg(test)]
+mod test{
+    #[test]
+    fn run_init_files_test(){
+        todo!("Mock 'PathBuf::exists', 'repl' and 'var_os' and then assert on the return")
+    }
 }
 //TODO give the user a bare-minimum working shell instead of bailing
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
