@@ -35,12 +35,12 @@ fn run_config_file() -> Option<Result<(), Error>> {
     get_config_file().and_then(|config_file| Some(repl(ReplSource::File(config_file))))
 }
 fn run_profile() -> Option<Result<(), Error>> {
-    //TODO run /etc/profile then run $HOME/.profile
     let usr_profile = PathBuf::from("/etc/profile");
     if usr_profile.exists() {
-        return Some(repl(ReplSource::File(usr_profile)));
+        Some(repl(ReplSource::File(usr_profile)))
+    } else {
+        None
     }
-    return None;
 }
 //TODO give the user a bare-minimum working shell instead of bailing
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
@@ -50,5 +50,5 @@ pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
             _ => {}
         }
     }
-    return run_config_file();
+    run_config_file()
 }
