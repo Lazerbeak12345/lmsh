@@ -24,7 +24,7 @@ mod source {
         Ok(contents)
     }
     /// Given a source, either prompt the user for code, or open the file.
-    /// 
+    ///
     /// Returns as a string to ensure that both files and prompts are treated the same
     /// ```
     /// todo!("mock `File::open`")
@@ -400,11 +400,11 @@ fn rep(source: ReplSource) -> Result<(), io::Error> {
     Ok(eval(parse(str), str))
 }
 /// Run-Eval-Print-Loop.
-/// 
+///
 /// When the result is Ok no errors happened during execution.
 /// When result is Err, if it's an ReplError::ErrorCodes then it's a Vec of return codes, otherwise
 ///    it's a String with the error message.
-/// 
+///
 /// ```
 /// todo!("Mock read?")
 /// ```

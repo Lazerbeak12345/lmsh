@@ -16,7 +16,7 @@ fn main() {
     });
     if args.version {
         greet();
-        println!("version {}",env!("CARGO_PKG_VERSION"))
+        println!("version {}", env!("CARGO_PKG_VERSION"))
     } else {
         match run_init_files(args.login) {
             Some(Ok(())) => {}
