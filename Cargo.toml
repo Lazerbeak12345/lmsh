@@ -12,4 +12,6 @@ publish = false # Don't publish till it meets the MVP
 
 [dependencies]
 combine="4.6"
+
+[dev-dependencies]
 proptest="1.0"
