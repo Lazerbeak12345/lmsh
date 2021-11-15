@@ -46,6 +46,7 @@ pub mod tree {
     use combine::{
         attempt, many, many1, none_of, optional, EasyParser, Parser, Stream as StreamTrait,
     };
+    use proptest::prelude::*;
     #[derive(Debug)]
     pub struct Function {
         name: String,
@@ -350,6 +351,12 @@ pub mod tree {
     parser! {
         fn statements[Input]()(Input)->Vec<Statement>where[Input:StreamTrait<Token=char>]{
             many(statement())
+        }
+    }
+    proptest! {
+        #[test]
+        fn parse_doesnt_crash(s in "\\PC*"){
+            parse(s.as_str());
         }
     }
     /// Parse a given input str. Output is intended to be piped directly to eval.
