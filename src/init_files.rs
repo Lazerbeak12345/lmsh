@@ -42,13 +42,11 @@ fn run_profile() -> Option<Result<(), Error>> {
         None
     }
 }
-#[cfg(test)]
-mod test{
-    #[test]
-    fn run_init_files_test(){
-        todo!("Mock 'PathBuf::exists'(ext), 'repl'(internal) and 'var_os'(ext) and then assert on the return")
-    }
-}
+/// First run the global profile then run the user-level profile.
+///
+/// ```
+/// todo!("Mock 'PathBuf::exists'(ext), 'repl'(internal) and 'var_os'(ext) and then assert on the return")
+/// ```
 //TODO give the user a bare-minimum working shell instead of bailing
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
     if login {

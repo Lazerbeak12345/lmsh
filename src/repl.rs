@@ -23,6 +23,12 @@ mod source {
         buf_reader.read_to_string(&mut contents)?;
         Ok(contents)
     }
+    /// Given a source, either prompt the user for code, or open the file.
+    /// 
+    /// Returns as a string to ensure that both files and prompts are treated the same
+    /// ```
+    /// todo!("mock `File::open`")
+    /// ```
     pub fn read(source: ReplSource) -> IOResult<String> {
         match source {
             ReplSource::User => prompt(),
@@ -32,7 +38,7 @@ mod source {
 }
 pub use source::ReplSource;
 use source::*;
-mod tree {
+pub mod tree {
     extern crate combine;
     use combine::parser::char::{char, digit, string};
     use combine::parser::repeat::take_until;
@@ -346,6 +352,15 @@ mod tree {
             many(statement())
         }
     }
+    /// Parse a given input str. Output is intended to be piped directly to eval.
+    /// ```
+    /// use lmsh::repl::tree::parse;
+    /// let data="echo Hello, World!";
+    /// let parsed=match parse(data){
+    ///     Ok(_)=>todo!("handle ok"),
+    ///     Err(e)=>panic!("Not supposed to fail! {:?}",e),
+    /// };
+    /// ```
     pub fn parse<'a>(
         str: &'a str,
     ) -> Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>> {
@@ -384,13 +399,15 @@ fn rep(source: ReplSource) -> Result<(), io::Error> {
     let str = &read(source)?;
     Ok(eval(parse(str), str))
 }
-/**
- * Run-Eval-Print-Loop.
- *
- * When the result is Ok no errors happened during execution.
- * When result is Err, if it's an ReplError::ErrorCodes then it's a Vec of return codes, otherwise
- *    it's a String with the error message.
- */
+/// Run-Eval-Print-Loop.
+/// 
+/// When the result is Ok no errors happened during execution.
+/// When result is Err, if it's an ReplError::ErrorCodes then it's a Vec of return codes, otherwise
+///    it's a String with the error message.
+/// 
+/// ```
+/// todo!("Mock read?")
+/// ```
 pub fn repl(source: ReplSource) -> Result<(), io::Error> {
     match source {
         ReplSource::File(..) => rep(source),

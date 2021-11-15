@@ -5,6 +5,11 @@ pub struct Arguments {
     pub login: bool,
 }
 impl Arguments {
+    /// Parse the cli arguments.
+    ///
+    /// ```
+    /// todo!("mock out `env::args`")
+    /// ```
     pub fn parse() -> Result<Arguments, String> {
         let mut arguments = Arguments {
             interactive: true, //TODO "If the -i option is present, or if there are no operands and the shell's standard input and standard error are attached to a terminal, the shell is considered to be _interactive_": TDLR; detect if stdio and stderr are both a terminal
