@@ -46,7 +46,6 @@ pub mod tree {
     use combine::{
         attempt, many, many1, none_of, optional, EasyParser, Parser, Stream as StreamTrait,
     };
-    use proptest::prelude::*;
     #[derive(Debug)]
     pub struct Function {
         name: String,
@@ -353,10 +352,15 @@ pub mod tree {
             many(statement())
         }
     }
-    proptest! {
-        #[test]
-        fn parse_doesnt_crash(s in "\\PC*"){
-            parse(s.as_str());
+    #[cfg(test)]
+    mod test{
+        use proptest::prelude::*;
+        use super::parse;
+        proptest! {
+            #[test]
+            fn parse_doesnt_crash(s in "\\PC*"){
+                parse(s.as_str());
+            }
         }
     }
     /// Parse a given input str. Output is intended to be piped directly to eval.
