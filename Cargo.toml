@@ -17,4 +17,4 @@ combine="4.6"
 
 [dev-dependencies]
 proptest="1.0"
-mockall = "0.10.2"
+mockall = "0.10"
