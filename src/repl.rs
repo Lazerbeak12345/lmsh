@@ -423,9 +423,8 @@ pub fn repl(source: ReplSource) -> Result<(), io::Error> {
     match source {
         ReplSource::File(..) => rep(source),
         ReplSource::User => loop {
-            match rep(ReplSource::User) {
-                Err(err) => todo!("Handle error {}", err),
-                _ => {}
+            if let Err(err) = rep(ReplSource::User) {
+                todo!("Handle error {}", err)
             }
         },
     }

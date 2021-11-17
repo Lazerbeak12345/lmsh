@@ -18,14 +18,10 @@ fn main() {
         greet();
         println!("version {}", env!("CARGO_PKG_VERSION"))
     } else {
-        match run_init_files(args.login) {
-            Some(Ok(())) => {}
-            Some(Err(err)) => {
-                eprintln!("In a config file {}", err);
-                exit(2)
-            }
-            None => {}
-        };
+        if let Some(Err(err)) = run_init_files(args.login) {
+            eprintln!("In a config file {}", err);
+            exit(2)
+        }
         if args.interactive {
             greet();
             match repl(ReplSource::User) {

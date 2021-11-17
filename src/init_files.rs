@@ -42,17 +42,16 @@ fn run_profile() -> Option<Result<(), Error>> {
         None
     }
 }
+//TODO give the user a bare-minimum working shell instead of bailing
 /// First run the global profile then run the user-level profile.
 ///
 /// ```
 /// todo!("Mock 'PathBuf::exists'(ext), 'repl'(internal) and 'var_os'(ext) and then assert on the return")
 /// ```
-//TODO give the user a bare-minimum working shell instead of bailing
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
     if login {
-        match run_profile() {
-            Some(Err(err)) => return Some(Err(err)),
-            _ => {}
+        if let Some(Err(err)) = run_profile(){
+            return Some(Err(err))
         }
     }
     run_config_file()
