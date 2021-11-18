@@ -359,7 +359,7 @@ pub mod tree {
         proptest! {
             #[test]
             fn parse_doesnt_crash(s in "\\PC*"){
-                parse(s.as_str());
+                let _ = parse(s.as_str());
             }
         }
     }
