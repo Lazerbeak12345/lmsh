@@ -1,5 +1,4 @@
 use combine::easy::Errors;
-use combine::stream::easy::{ParseError, Stream};
 use std::fmt::{Display, Error, Formatter};
 use std::io;
 mod source {
@@ -43,9 +42,7 @@ pub mod tree {
     use combine::parser::char::{char, digit, string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError, Stream};
-    use combine::{
-        attempt, many, many1, none_of, optional, EasyParser, Parser, Stream as StreamTrait,
-    };
+    use combine::{EasyParser, Parser, Stream as StreamTrait, attempt, many, many1, none_of, optional};
     #[derive(Debug)]
     pub struct Function {
         name: String,
@@ -363,24 +360,22 @@ pub mod tree {
             }
         }
     }
+    pub type ParseReturn<'a>=Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>>;
     /// Parse a given input str. Output is intended to be piped directly to eval.
     /// ```
-    /// use lmsh::repl::tree::parse;
+    /// # fn main()->ParseReturn<'static>{
+    /// use lmsh::repl::tree::{parse,ParseResult};
     /// let data="echo Hello, World!";
-    /// let parsed=match parse(data){
-    ///     Ok(_)=>todo!("handle ok"),
-    ///     Err(e)=>panic!("Not supposed to fail! {:?}",e),
-    /// };
+    /// parse(data)
+    /// # }
     /// ```
-    pub fn parse<'a>(
-        str: &'a str,
-    ) -> Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>> {
+    pub fn parse<'a>(str: &'a str) -> ParseReturn<'a> {
         //TODO return something else, keeping the call to translate_position in here
         statements().easy_parse(str)
     }
 }
 use tree::*;
-fn eval<'a>(tree: Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>>, str: &'a str) {
+fn eval<'a>(tree: ParseReturn<'a>, str: &'a str) {
     match tree {
         Ok(tree) => todo!("Run the code! {:?}", tree),
         Err(errors) => {
