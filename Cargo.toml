@@ -2,7 +2,7 @@
 name = "lmsh"
 version = "0.1.0"
 authors = ["Nathan Fritzler <nfblaster@live.com>"]
-edition = "2018"
+edition = "2021"
 description = "A minimal shell compatible with `/bin/sh`."
 repository = "https://github.com/Lazerbeak12345/lmsh"
 license = "MIT"
