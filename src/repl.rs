@@ -42,7 +42,9 @@ pub mod tree {
     use combine::parser::char::{char, digit, string};
     use combine::parser::repeat::take_until;
     use combine::stream::easy::{ParseError, Stream};
-    use combine::{EasyParser, Parser, Stream as StreamTrait, attempt, many, many1, none_of, optional};
+    use combine::{
+        attempt, many, many1, none_of, optional, EasyParser, Parser, Stream as StreamTrait,
+    };
     #[derive(Debug)]
     pub struct Function {
         name: String,
@@ -114,8 +116,8 @@ pub mod tree {
     }
     #[derive(Debug)]
     pub struct Command {
-        program: Argument,
-        arguments: Vec<Argument>,
+        pub program: Argument,
+        pub arguments: Vec<Argument>,
     }
     #[derive(Debug)]
     pub enum If {
@@ -146,13 +148,16 @@ pub mod tree {
     where
         Input: StreamTrait<Token = char>,
     {
-        many1(char('#').with(take_until(char('\n'))).and(char('\n')).map(
-            |(mut left, right): (String, char)| {
-                left.push(right);
-                left
-            },
-        ))
-        .skip(many::<Vec<_>, _, _>(char('\n')))
+        choice!(
+            string("\n").map(|_| "\n".into()),
+            many1(char('#').with(take_until(char('\n'))).and(char('\n')).map(
+                |(mut left, right): (String, char)| {
+                    left.push(right);
+                    left
+                },
+            ))
+            .skip(many::<Vec<_>, _, _>(char('\n')))
+        )
     }
     fn variable_name<Input>() -> impl Parser<Input, Output = String>
     where
@@ -350,23 +355,55 @@ pub mod tree {
         }
     }
     #[cfg(test)]
-    mod test{
+    mod test {
+        use super::*;
         use proptest::prelude::*;
-        use super::parse;
+        #[test]
+        fn parse_newline() {
+            if let Ok((statements, str)) = parse("\n") {
+                assert_eq!(str, "", "There must be no leftover characters.");
+                assert_eq!(statements.len(), 1);
+                if let Some(Statement::CommentBlock(str)) = statements.first() {
+                    assert_eq!(str, "\n", "Comment is only newline");
+                } else {
+                    assert!(false, "First statement must be comment")
+                }
+            } else {
+                assert!(false, "Must be able to parse.")
+            }
+        }
         proptest! {
             #[test]
             fn parse_doesnt_crash(s in "\\PC*"){
                 let _ = parse(s.as_str());
             }
+            #[test]
+            fn parse_simple_command(s in "[^ ]+( [^\"']*)*\n"){
+                match parse(s.as_str()) {
+                    Ok((statements,str))=>{
+                        assert_eq!(str,"","There must be no leftover characters.");
+                        assert_eq!(statements.len(),1);
+                        todo!("Finish writing tests...")
+                    },
+                    Err(err)=>assert!(false,"Got error {}",err)
+                }
+            }
         }
     }
-    pub type ParseReturn<'a>=Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>>;
+    pub type ParseReturn<'a> = Result<(Vec<Statement>, &'a str), ParseError<Stream<&'a str>>>;
+    // //assert_eq!(parse(data),Ok((vec![Statement::Command(Command{})],data)))
+
     /// Parse a given input str. Output is intended to be piped directly to eval.
     /// ```
-    /// # fn main()->ParseReturn<'static>{
-    /// use lmsh::repl::tree::{parse,ParseResult};
+    /// use lmsh::repl::tree::{parse,Command,Statement,ArgumentPart};
+    /// # fn main(){
     /// let data="echo Hello, World!";
-    /// parse(data)
+    /// match parse(data){
+    ///     Ok((statements,str))=>{
+    ///         assert!(false,"not done writing test yet...");
+    ///     },
+    ///     _=>unreachable!("Parse was not ok"),
+    /// }
     /// # }
     /// ```
     pub fn parse<'a>(str: &'a str) -> ParseReturn<'a> {

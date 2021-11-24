@@ -50,8 +50,8 @@ fn run_profile() -> Option<Result<(), Error>> {
 /// ```
 pub fn run_init_files(login: bool) -> Option<Result<(), Error>> {
     if login {
-        if let Some(Err(err)) = run_profile(){
-            return Some(Err(err))
+        if let Some(Err(err)) = run_profile() {
+            return Some(Err(err));
         }
     }
     run_config_file()
